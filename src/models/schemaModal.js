@@ -1,9 +1,28 @@
 import mongoose from 'mongoose';
 
+/* =====================  PERMISSION SCHEMA  ===================== */
+
+const PermissionSchema = new mongoose.Schema(
+  {
+    key: { type: String, required: true, unique: true }, // view_courses
+    description: { type: String },
+    module: { type: String }, // courses, users, payments
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+  },
+  { collection: 'permissions' }
+);
+
+PermissionSchema.pre('save', function () {
+  this.updated_at = Date.now();
+}); 
+
 /* ===================== USER ROLES SCHEMA ===================== */
 const UserRolesSchema = new mongoose.Schema(
   {
     user_type: { type: String, required: true },
+    description: { type: String },
+    permissions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Permissions' }],
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
   },
@@ -638,6 +657,7 @@ ApiThrottlingSchema.pre('save', function () {
 });
 
 /* =====================  EXPORT MODELS  ===================== */
+export const Permissions = mongoose.models.Permissions || mongoose.model("Permissions", PermissionSchema);
 export const UserRoles = mongoose.models.UserRoles || mongoose.model("UserRoles", UserRolesSchema);
 export const Users = mongoose.models.Users || mongoose.model('Users', UserSchema);
 export const Sessions = mongoose.models.Sessions || mongoose.model('Sessions', SessionSchema);

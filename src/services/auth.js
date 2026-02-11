@@ -5,11 +5,6 @@ import {
   Users,
 } from "@/models/schemaModal.js";
 import roleService from "./roleService.js";
-// import {
-//   generateAccessToken,
-//   generateTokens,
-//   verifyToken,
-// } from "@/utils/jwt.js";
 import {
   comparePassword,
   generateRandomToken,
@@ -20,11 +15,7 @@ import {
   generateTokens,
   VerifyToken,
 } from "@/utils/jwt.js";
-import {
-  alreadyExists,
-  notFound,
-  validationError,
-} from "@/utils/apiResponse.js";
+import { notFound, validationError } from "@/utils/apiResponse.js";
 import mongoose from "mongoose";
 
 export default class AuthService {
@@ -381,90 +372,151 @@ export default class AuthService {
     }
   }
 
-  /**
-   * Get all users (admin only)
-   */
-async getAllUsers(payload) {
-  try {
-    const {
-      search = "",
-      role_id,
-      created_from,
-      created_to,
-      updated_from,
-      updated_to,
-      page = 1,
-      pageSize = 10,
-      sort = "desc",
-    } = payload;
+  // ====================== Get all users ======================
+  async getAllUsers(payload) {
+    try {
+      const {
+        search = "",
+        role_id,
+        created_from,
+        created_to,
+        updated_from,
+        updated_to,
+        page = 1,
+        pageSize = 10,
+        sort = "desc",
+      } = payload;
 
-    const skip = (page - 1) * pageSize;
+      const skip = (page - 1) * pageSize;
 
-    // 🔍 Search Query
-    const searchQuery = search
-      ? {
-          $or: [
-            { username: { $regex: search, $options: "i" } },
-            { email: { $regex: search, $options: "i" } },
-            { phone: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
+      // 🔍 Search Query
+      const searchQuery = search
+        ? {
+            $or: [
+              { username: { $regex: search, $options: "i" } },
+              { email: { $regex: search, $options: "i" } },
+              { phone: { $regex: search, $options: "i" } },
+            ],
+          }
+        : {};
 
-    // 🎯 Filters
-    const filterQuery = {
-      ...searchQuery,
-    };
+      // 🎯 Filters
+      const filterQuery = {
+        ...searchQuery,
+      };
 
-    if (role_id) {
-      filterQuery.role_id = role_id;
-    }
+      if (role_id) {
+        filterQuery.role_id = role_id;
+      }
 
-    if (created_from || created_to) {
-      filterQuery.created_at = {};
-      if (created_from) filterQuery.created_at.$gte = new Date(created_from);
-      if (created_to) filterQuery.created_at.$lte = new Date(created_to);
-    }
+      if (created_from || created_to) {
+        filterQuery.created_at = {};
+        if (created_from) filterQuery.created_at.$gte = new Date(created_from);
+        if (created_to) filterQuery.created_at.$lte = new Date(created_to);
+      }
 
-    if (updated_from || updated_to) {
-      filterQuery.updated_at = {};
-      if (updated_from) filterQuery.updated_at.$gte = new Date(updated_from);
-      if (updated_to) filterQuery.updated_at.$lte = new Date(updated_to);
-    }
+      if (updated_from || updated_to) {
+        filterQuery.updated_at = {};
+        if (updated_from) filterQuery.updated_at.$gte = new Date(updated_from);
+        if (updated_to) filterQuery.updated_at.$lte = new Date(updated_to);
+      }
 
-    // 📄 Data Query
-    const users = await Users.find(filterQuery)
-      .populate("role_id")
-      .select(
-        "-password -refreshTokens -resetPasswordToken -emailVerificationToken"
-      )
-      .sort({ created_at: sort === "asc" ? 1 : -1 })
-      .skip(skip)
-      .limit(pageSize);
+      // 📄 Data Query
+      const users = await Users.find(filterQuery)
+        .populate("role_id")
+        .select(
+          "-password -refreshTokens -resetPasswordToken -emailVerificationToken",
+        )
+        .sort({ created_at: sort === "asc" ? 1 : -1 })
+        .skip(skip)
+        .limit(pageSize);
 
-    // 🔢 Total Count
-    const total = await Users.countDocuments(filterQuery);
+      // 🔢 Total Count
+      const total = await Users.countDocuments(filterQuery);
 
-    return {
-      success: true,
-      data: {
-        users: users.map((user) => this.sanitizeUser(user)),
-        pagination: {
-          total,
-          page,
-          pageSize,
-          pages: Math.ceil(total / pageSize),
+      return {
+        success: true,
+        data: {
+          users: users.map((user) => this.sanitizeUser(user)),
+          pagination: {
+            total,
+            page,
+            pageSize,
+            pages: Math.ceil(total / pageSize),
+          },
         },
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: error.message,
-    };
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
   }
-}
 
+  // ====================== forgePasswort ======================
+  async forgetPassword(payload) {
+    try {
+      const { email } = payload;
+
+      const user = await Users.findOne({ email });
+      if (!user) {
+        return notFound("User not found");
+      }
+
+      const resetToken = generateRandomToken();
+
+      user.resetPasswordToken = resetToken;
+      user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min
+      await user.save();
+      return {
+        success: true,
+        message: "Password reset link sent to email",
+        data: { resetToken }, // ⚠️ remove in production
+      };
+    } catch (error) {
+      console.error("ForgetPassword Error:", error);
+      return {
+        success: false,
+        message: error.message || "Something went wrong in forgetPassword",
+        data: {},
+      };
+    }
+  }
+  // ==================== Reset Password ==================
+  async resetPassword(payload) {
+    try {
+      const { token, newPassword } = payload;
+
+      const user = await Users.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return notFound("Invalid or expired reset token");
+      }
+
+      user.password = await hashPassword(newPassword);
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+
+      await user.save();
+
+      return {
+        success: true,
+        message: "Password reset successfully",
+        data: {},
+      };
+    } catch (error) {
+      console.error("ResetPassword Error:", error);
+      return {
+        success: false,
+        message: error.message || "Something went wrong in resetPassword",
+        data: {},
+      };
+    }
+  }
 
   /**
    * Sanitize user object (remove sensitive data)

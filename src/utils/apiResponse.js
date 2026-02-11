@@ -27,3 +27,6 @@ export const forbidden = (message = "Access denied") =>
 
 export const serverError = (message = "Internal server error") =>
   apiResponse(500, message);
+
+export const notFound = (message = "Not found", data = {}) =>
+  apiResponse(404, message, data);

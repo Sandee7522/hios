@@ -1,10 +1,10 @@
-import { Users } from "@/models/schemaModal";
+import { UserRoles, Users } from "@/models/schemaModal";
 import jwt from "jsonwebtoken";
 
 const {
   JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET,
-  JWT_ACCESS_EXPIRES_IN = "15m",
+  JWT_ACCESS_EXPIRES_IN = "15d",
   JWT_REFRESH_EXPIRES_IN = "7d",
 } = process.env;
 
@@ -29,41 +29,124 @@ export const generateTokens = (payload) => ({
   refreshToken: generateRefreshToken(payload),
 });
 
-
 export const VerifyToken = async (req) => {
-  const authHeader = req.headers.get("authorization");
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw Object.assign(new Error("Authorization token missing"), {
-      status: 401,
-    });
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  let decoded;
   try {
-    decoded = jwt.verify(token, JWT_ACCESS_SECRET);
+    const authHeader = req.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return {
+        status: false,
+        code: 401,
+        message: "Authorization token missing",
+      };
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_ACCESS_SECRET);
+    } catch (error) {
+      return {
+        status: false,
+        code: 401,
+        message: "Invalid or expired token",
+      };
+    }
+
+    const userId = decoded.userId || decoded.id;
+
+    const user = await Users.findById(userId);
+    if (!user) {
+      return {
+        status: false,
+        code: 401,
+        message: "User not found",
+      };
+    }
+
+    // optional attach
+    req.user = user;
+
+    return {
+      status: true,
+      code: 200,
+      message: "Token verified",
+      data: { user, decoded },
+    };
   } catch (error) {
-    throw Object.assign(new Error("Invalid or expired token"), {
-      status: 401,
-    });
+    return {
+      status: false,
+      code: 500,
+      message: error.message,
+    };
   }
-
-  const userId = decoded.userId || decoded.id;
-
-  const user = await Users.findById(userId);
-  if (!user) {
-    throw Object.assign(new Error("User not found"), {
-      status: 401,
-    });
-  }
-
-  // attach user to request (optional but recommended)
-  req.user = user;
-
-  return {
-    decoded,
-    user,
-  };
 };
+
+export async function AdminAuthentication(req) {
+  try {
+    const authHeader = req.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return {
+        status: false,
+        code: 401,
+        message: "Admin token missing",
+      };
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_ACCESS_SECRET);
+    } catch (error) {
+      return {
+        status: false,
+        code: 401,
+        message: "Invalid or expired token",
+      };
+    }
+
+    const admin_id = decoded.userId || decoded.id;
+
+    const adminData = await Users.findById(admin_id);
+    if (!adminData) {
+      return {
+        status: false,
+        code: 401,
+        message: "User not found",
+      };
+    }
+
+    const role = await UserRoles.findById(adminData.role_id);
+    if (!role) {
+      return {
+        status: false,
+        code: 403,
+        message: "Role not found",
+      };
+    }
+
+    if (role.user_type !== "admin") {
+      return {
+        status: false,
+        code: 403,
+        message: "Admin authentication failed",
+      };
+    }
+
+    return {
+      status: true,
+      code: 200,
+      message: "Admin authenticated",
+      data: { adminData },
+    };
+  } catch (error) {
+    return {
+      status: false,
+      code: 500,
+      message: error.message,
+    };
+  }
+}

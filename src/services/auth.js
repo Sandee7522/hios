@@ -1,4 +1,9 @@
-import { Sessions, Users } from "@/models/schemaModal.js";
+import {
+  Sessions,
+  UserDetails,
+  UserRoles,
+  Users,
+} from "@/models/schemaModal.js";
 import roleService from "./roleService.js";
 // import {
 //   generateAccessToken,
@@ -10,7 +15,17 @@ import {
   generateRandomToken,
   hashPassword,
 } from "@/utils/password.js";
-import { generateTokens, VerifyToken } from "@/utils/jwt.js";
+import {
+  generateAccessToken,
+  generateTokens,
+  VerifyToken,
+} from "@/utils/jwt.js";
+import {
+  alreadyExists,
+  notFound,
+  validationError,
+} from "@/utils/apiResponse.js";
+import mongoose from "mongoose";
 
 export default class AuthService {
   async register({ name, email, password, role_type = "user" }) {
@@ -111,9 +126,6 @@ export default class AuthService {
   }
   y;
 
-  /**
-   * Logout user
-   */
   async logout(refreshToken) {
     try {
       if (!refreshToken) throw new Error("Refresh token required");
@@ -185,113 +197,160 @@ export default class AuthService {
     }
   }
 
-  /**
-   * Assign role to user
-   * This is used by admin to change user's role
-   */
-  async assignRole(userId, roleType) {
+  // ==================================== Assign role =========================
+  async assignRole(payload) {
     try {
-      if (!userId || !roleType) {
-        throw new Error("User ID and role type are required");
+      const { user_id, role_id } = payload;
+
+      // Validate role exists
+      const role = await UserRoles.findById(role_id);
+
+      if (!role) {
+        return {
+          status: 404,
+          message: "Role not found",
+          data: {},
+        };
       }
 
-      // Get role
-      const roleResult = await roleService.getRoleByType(roleType);
-
-      if (!roleResult.success) {
-        throw new Error(roleResult.message);
-      }
-
-      // Update user's role
+      // Update user role
       const user = await Users.findByIdAndUpdate(
-        userId,
-        { role_id: roleResult.data._id },
+        user_id,
+        { role_id: role._id },
         { new: true },
       ).populate("role_id");
 
       if (!user) {
-        throw new Error("User not found");
+        return {
+          status: 404,
+          message: "User not found",
+          data: {},
+        };
       }
 
       return {
-        success: true,
-        data: {
-          user: this.sanitizeUser(user),
-        },
+        status: 200,
         message: "Role assigned successfully",
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
-    }
-  }
-
-  /**
-   * Get user by ID
-   */
-  async getUserById(userId) {
-    try {
-      const user = await Users.findById(userId)
-        .populate("role_id")
-        .select(
-          "-password -refreshTokens -resetPasswordToken -emailVerificationToken",
-        );
-
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      return {
-        success: true,
         data: {
           user: this.sanitizeUser(user),
         },
       };
     } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
+      console.log("Assign role error:", error);
+      throw error;
     }
   }
 
-  /**
-   * Update user profile
-   */
-  async updateProfile(userId, updateData) {
+  //==================================== Create user profile =========================
+  async createProfile(payload) {
     try {
-      // Remove protected fields
-      delete updateData.password;
-      delete updateData.email;
-      delete updateData.role_id;
-      delete updateData.refreshTokens;
-      delete updateData.resetPasswordToken;
-      delete updateData.emailVerificationToken;
+      const {
+        user_id,
+        username,
+        bio,
+        phone,
+        dateOfBirth,
+        address,
+        socialLinks,
+      } = payload;
 
-      const user = await Users.findByIdAndUpdate(
-        userId,
-        { $set: updateData },
-        { new: true, runValidators: true },
-      ).populate("role_id");
+      const existingProfile = await UserDetails.findOne({ user_id });
+      if (existingProfile) {
+        return {
+          status: 409,
+          message: "Profile already exists",
+        };
+      }
 
-      if (!user) {
-        throw new Error("User not found");
+      const profile = await UserDetails.create({
+        user_id,
+        username,
+        bio,
+        phone,
+        dateOfBirth,
+        address,
+        socialLinks,
+      });
+
+      console.log("Profile created::::::::::::::::::: ", profile);
+
+      return {
+        status: 201,
+        message: "Profile created successfully",
+        data: profile,
+      };
+    } catch (error) {
+      console.log("Create profile error: ", error);
+      throw error;
+    }
+  }
+
+  // ==================================== Get user by ID =========================
+
+  async getProfileById(payload) {
+    try {
+      const { user_id } = payload;
+
+      const profile = await UserDetails.findOne({ user_id })
+        .populate("user_id", "name email")
+        .lean();
+
+      if (!profile) {
+        return notFound("Profile not found");
       }
 
       return {
-        success: true,
-        data: {
-          user: this.sanitizeUser(user),
+        status: 200,
+        message: "Profile fetched successfully",
+        data: profile,
+      };
+    } catch (error) {
+      console.log("Get profile error:", error);
+      throw error;
+    }
+  }
+
+  // ==================================== update profile with user id =========================
+
+  async updateProfile(payload) {
+    try {
+      const {
+        user_id,
+        username,
+        bio,
+        phone,
+        dateOfBirth,
+        address,
+        socialLinks,
+      } = payload;
+
+      console.log("Update profile :::::::::::", payload);
+
+      const updatedProfile = await UserDetails.findOneAndUpdate(
+        { user_id },
+        {
+          username,
+          bio,
+          phone,
+          dateOfBirth,
+          address,
+          socialLinks,
         },
+        { new: true },
+      );
+
+      if (!updatedProfile) {
+        return notFound("Profile not found");
+      }
+
+      return {
+        status: 200,
         message: "Profile updated successfully",
+        data: updatedProfile,
       };
     } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
+      console.log("Update profile error:", error);
+      throw error;
     }
   }
 
@@ -323,69 +382,89 @@ export default class AuthService {
   }
 
   /**
-   * Terminate specific session
-   */
-  async terminateSession(userId, sessionId) {
-    try {
-      const session = await Sessions.findOneAndUpdate(
-        { _id: sessionId, userId: userId },
-        { isActive: false },
-        { new: true },
-      );
-
-      if (!session) {
-        throw new Error("Session not found");
-      }
-
-      return {
-        success: true,
-        message: "Session terminated successfully",
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
-    }
-  }
-
-  /**
    * Get all users (admin only)
    */
-  async getAllUsers(filters = {}, page = 1, limit = 10) {
-    try {
-      const skip = (page - 1) * limit;
+async getAllUsers(payload) {
+  try {
+    const {
+      search = "",
+      role_id,
+      created_from,
+      created_to,
+      updated_from,
+      updated_to,
+      page = 1,
+      pageSize = 10,
+      sort = "desc",
+    } = payload;
 
-      const users = await Users.find(filters)
-        .populate("role_id")
-        .select(
-          "-password -refreshTokens -resetPasswordToken -emailVerificationToken",
-        )
-        .sort({ created_at: -1 })
-        .limit(limit)
-        .skip(skip);
+    const skip = (page - 1) * pageSize;
 
-      const total = await Users.countDocuments(filters);
+    // 🔍 Search Query
+    const searchQuery = search
+      ? {
+          $or: [
+            { username: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+            { phone: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
 
-      return {
-        success: true,
-        data: {
-          users: users.map((user) => this.sanitizeUser(user)),
-          pagination: {
-            total,
-            page,
-            limit,
-            pages: Math.ceil(total / limit),
-          },
-        },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message,
-      };
+    // 🎯 Filters
+    const filterQuery = {
+      ...searchQuery,
+    };
+
+    if (role_id) {
+      filterQuery.role_id = role_id;
     }
+
+    if (created_from || created_to) {
+      filterQuery.created_at = {};
+      if (created_from) filterQuery.created_at.$gte = new Date(created_from);
+      if (created_to) filterQuery.created_at.$lte = new Date(created_to);
+    }
+
+    if (updated_from || updated_to) {
+      filterQuery.updated_at = {};
+      if (updated_from) filterQuery.updated_at.$gte = new Date(updated_from);
+      if (updated_to) filterQuery.updated_at.$lte = new Date(updated_to);
+    }
+
+    // 📄 Data Query
+    const users = await Users.find(filterQuery)
+      .populate("role_id")
+      .select(
+        "-password -refreshTokens -resetPasswordToken -emailVerificationToken"
+      )
+      .sort({ created_at: sort === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(pageSize);
+
+    // 🔢 Total Count
+    const total = await Users.countDocuments(filterQuery);
+
+    return {
+      success: true,
+      data: {
+        users: users.map((user) => this.sanitizeUser(user)),
+        pagination: {
+          total,
+          page,
+          pageSize,
+          pages: Math.ceil(total / pageSize),
+        },
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
   }
+}
+
 
   /**
    * Sanitize user object (remove sensitive data)

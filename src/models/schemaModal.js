@@ -33,43 +33,49 @@ UserRolesSchema.pre("save", async function(){
   this.updated_at = Date.now();
 });
 
-/* =====================  USER SCHEMA  ===================== */
+/* ===================== USER SCHEMA (AUTH) ===================== */
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    role_id: { type: mongoose.Schema.Types.ObjectId, ref: 'UserRoles', required: true },
+    role_id: { type: mongoose.Schema.Types.ObjectId, ref: "UserRoles", required: true },
     isEmailVerified: { type: Boolean, default: false },
-    profileImage: { type: String },
-    bio: { type: String },
-    phone: { type: String },
-    dateOfBirth: { type: Date },
-    address: {
-      street: { type: String },
-      city: { type: String },
-      state: { type: String },
-      country: { type: String },
-      zipCode: { type: String }
-    },
-    socialLinks: {
-      linkedin: { type: String },
-      twitter: { type: String },
-      website: { type: String }
-    },
-    instructorStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'none'], default: 'none' },
     refreshTokens: [{ type: String }],
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
     emailVerificationToken: { type: String },
     emailVerificationExpires: { type: Date },
     created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
+    updated_at: { type: Date, default: Date.now },
   },
-  { collection: 'users' }
+  { collection: "users" }
 );
 
-UserSchema.pre('save', function () {
+UserSchema.pre("save", function () {
+  this.updated_at = Date.now();
+});
+
+/* ===================== USER DETAILS SCHEMA ===================== */
+const UserDetailsSchema = new mongoose.Schema(
+  {
+    user_id: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
+    profileImage: { type: String },
+    bio: { type: String },
+    phone: { type: String },
+    username: { type: String },
+    dateOfBirth: { type: Date },
+    gender: { type: String, enum: ["male", "female", "other"] },
+    address: { street: { type: String }, city: { type: String }, state: { type: String }, country: { type: String }, zipCode: { type: String } },
+    socialLinks: { linkedin: { type: String }, twitter: { type: String }, website: { type: String } },
+    instructorStatus: { type: String, enum: ["pending", "approved", "rejected", "none"], default: "none" },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now },
+  },
+  { collection: "user_details" }
+);
+
+UserDetailsSchema.pre("save", function () {
   this.updated_at = Date.now();
 });
 
@@ -660,6 +666,7 @@ ApiThrottlingSchema.pre('save', function () {
 export const Permissions = mongoose.models.Permissions || mongoose.model("Permissions", PermissionSchema);
 export const UserRoles = mongoose.models.UserRoles || mongoose.model("UserRoles", UserRolesSchema);
 export const Users = mongoose.models.Users || mongoose.model('Users', UserSchema);
+export const UserDetails = mongoose.models.UserDetails || mongoose.model("UserDetails", UserDetailsSchema);
 export const Sessions = mongoose.models.Sessions || mongoose.model('Sessions', SessionSchema);
 export const Categories = mongoose.models.Categories || mongoose.model('Categories', CategorySchema);
 export const Courses = mongoose.models.Courses || mongoose.model('Courses', CourseSchema);

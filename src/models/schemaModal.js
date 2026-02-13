@@ -133,6 +133,8 @@ const CourseSchema = new mongoose.Schema(
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories' },
     level: { type: String, enum: ['beginner', 'intermediate', 'advanced'], default: 'beginner' },
     language: { type: String, default: 'English' },
+    price: { type: Number, required: true, min: 0 },
+    discount: { type: Number, default: 0 },
     totalFee: { type: Number, required: true, min: 0 },
     currency: { type: String, default: 'INR' },
     partialPaymentEnabled: { type: Boolean, default: true },
@@ -147,15 +149,17 @@ const CourseSchema = new mongoose.Schema(
     status: { type: String, enum: ['draft', 'pending', 'published', 'archived', 'rejected'], default: 'draft' },
     isPublished: { type: Boolean, default: false },
     publishedAt: { type: Date },
-    totalStudents: { type: Number, default: 0 },
-    averageRating: { type: Number, default: 0, min: 0, max: 5 },
-    totalReviews: { type: Number, default: 0 },
-    totalRevenue: { type: Number, default: 0 },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
   },
   { collection: 'courses' }
 );
+CourseSchema.index({ title: "text", description: "text" });
+CourseSchema.index({ categoryId: 1 });
+CourseSchema.index({ instructorId: 1 });
+CourseSchema.index({ level: 1 });
+CourseSchema.index({ totalFee: 1 });
+CourseSchema.index({ created_at: -1 }); 
 
 CourseSchema.pre('save', function () {
   this.updated_at = Date.now();

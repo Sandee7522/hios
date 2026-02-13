@@ -2,6 +2,7 @@ import connectDB from "@/config/database";
 import { z } from "zod";
 import { apiResponse, validationError, serverError } from "@/utils/apiResponse";
 import AuthService from "@/services/auth";
+import { AdminAuthentication } from "@/utils/jwt";
 
 const schema = z.object({
   user_id: z.string().min(1, "user_id is required"),

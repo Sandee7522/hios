@@ -1,5 +1,5 @@
 import { UserRoles, Users } from "@/models/schemaModal";
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 
 const {
   JWT_ACCESS_SECRET,
@@ -150,3 +150,70 @@ export async function AdminAuthentication(req) {
     };
   }
 }
+
+export const InstructorAuthentication = async (req) => {
+  try {
+    const authHeader = req.headers.get("authentication");
+    if (!authHeader || !authHeader.startsWith("Bearer")) {
+      return {
+        status: false,
+        code: 401,
+        message: "Token is Missing",
+      };
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    try {
+      decode = jwt.verify(token, JWT_ACCESS_SECRET);
+    } catch (error) {
+      return {
+        status: false,
+        code: 401,
+        message: "Invalid or expired token",
+      };
+    }
+
+    const instructor_id = decoded.userId || decoded.id;
+
+    const instructorData = await Users.findById(instructor_id);
+    if (!instructorData) {
+      return {
+        status: false,
+        code: 401,
+        message: "User not found",
+      };
+    }
+
+    const role = await UserRoles.findById(instructorData.role_id);
+    if (!role) {
+      return {
+        status: false,
+        code: 403,
+        message: "Role not found",
+      };
+    }
+
+    if (role.user_type !== "instructor") {
+      return {
+        status: false,
+        code: 403,
+        message: "Instructor authentication failed",
+      };
+    }
+
+    return {
+      status: true,
+      code: 200,
+      message: "Instructor authenticated",
+      data: { instructorData },
+    };
+  } catch (error) {
+    return {
+      status: false,
+      code: 500,
+      message: error.message,
+    };
+  }
+};

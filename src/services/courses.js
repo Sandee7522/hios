@@ -1,8 +1,8 @@
-import { Categories, Courses } from "@/models/schemaModal";
+import { Categories, Courses, Lessons, Modules } from "@/models/schemaModal";
 import mongoose from "mongoose";
 import slugify from "slugify";
 
-export default class CourseServise {
+export default class CourseServises {
   //   ?*************************                       *********************************
   //                                CATEGORIES SERVICES
   //   ?*************************                       *********************************
@@ -10,6 +10,13 @@ export default class CourseServise {
   async createCategory(payload) {
     try {
       const { name, slug, description, icon, isActive } = payload;
+      const exists = await Categories.findOne({ slug });
+      if (exists) {
+        return {
+          success: false,
+          message: "Slug already exists",
+        };
+      }
 
       const category = await Categories.create({
         name,
@@ -18,15 +25,17 @@ export default class CourseServise {
         icon,
         isActive,
       });
+
       return {
         success: true,
         data: category,
       };
     } catch (error) {
-      console.log("Create sevice error:", error);
+      console.log("Create service error:", error);
       throw error;
     }
   }
+
   // ================= GET ALL CATEGORY ================
   async getAllCategory(payload) {
     try {
@@ -36,16 +45,15 @@ export default class CourseServise {
         pageSize = 10,
         sort = "asc",
         sortBy = "created_at",
-      } = options;
+        isActive,
+      } = payload;
 
       const query = {};
 
-      // isActive filter (safe)
-      if (typeof filters.isActive === "boolean") {
-        query.isActive = filters.isActive;
+      if (typeof isActive === "boolean") {
+        query.isActive = isActive;
       }
 
-      //  filter (indexed + regex safe)
       if (search && typeof search === "string") {
         query.$or = [
           { name: { $regex: search.trim(), $options: "i" } },
@@ -54,28 +62,24 @@ export default class CourseServise {
         ];
       }
 
-      //pagination safe
       const pageNumber = Math.max(Number(page) || 1, 1);
       const limit = Math.min(Number(pageSize) || 10, 100);
       const skip = (pageNumber - 1) * limit;
 
-      //sorting safe whitelist
       const allowedSortFields = ["created_at", "updated_at", "name", "slug"];
-
       const sortField = allowedSortFields.includes(sortBy)
         ? sortBy
         : "created_at";
-
       const sortOrder = sort === "desc" ? -1 : 1;
 
       const [categories, total] = await Promise.all([
-        this.Category.find(query)
+        Categories.find(query)
           .select("-__v")
           .sort({ [sortField]: sortOrder })
           .skip(skip)
           .limit(limit)
           .lean(),
-        this.Category.countDocuments(query),
+        Categories.countDocuments(query),
       ]);
 
       return {
@@ -93,6 +97,7 @@ export default class CourseServise {
       throw error;
     }
   }
+
   // ================= GET CATEGORY BY ID ================
   async getCategoryById(id) {
     try {
@@ -101,7 +106,7 @@ export default class CourseServise {
         return { success: false, error: "Invalid category ID" };
       }
 
-      const category = await this.Category.findById(id).select("-__v").lean();
+      const category = await Categories.findById(id).select("-__v").lean();
 
       if (!category) {
         return { success: false, error: "Category not found" };
@@ -121,9 +126,7 @@ export default class CourseServise {
         return { success: false, error: "Invalid slug" };
       }
 
-      const category = await this.Category.findOne({ slug })
-        .select("-__v")
-        .lean();
+      const category = await Categories.findOne({ slug }).select("-__v").lean();
 
       if (!category) {
         return { success: false, error: "Category not found" };
@@ -198,12 +201,15 @@ export default class CourseServise {
         title,
         slug,
         description,
+        shortDescription,
         thumbnail,
         previewVideo,
         instructorId,
         categoryId,
         level,
-        language,
+        courseLanguage,
+        price,
+        discount,
         totalFee,
         currency,
         partialPaymentEnabled,
@@ -226,25 +232,37 @@ export default class CourseServise {
         return { success: false, error: "Invalid categoryId" };
       }
 
+      // ✅ slug generate
       const finalSlug = slug
         ? slugify(slug, { lower: true, strict: true })
         : slugify(title, { lower: true, strict: true });
 
+      // ✅ duplicate check
       const existing = await Courses.findOne({ slug: finalSlug }).lean();
       if (existing) {
         return { success: false, error: "Course slug already exists" };
       }
 
+      // ✅ auto publish date
+      let finalPublishedAt = publishedAt;
+      if (isPublished && !publishedAt) {
+        finalPublishedAt = new Date();
+      }
+
+      // ✅ create
       const course = await Courses.create({
         title: title.trim(),
         slug: finalSlug,
         description,
+        shortDescription,
         thumbnail,
         previewVideo,
         instructorId,
         categoryId,
         level,
-        language,
+        courseLanguage,
+        price,
+        discount,
         totalFee,
         currency,
         partialPaymentEnabled,
@@ -255,12 +273,24 @@ export default class CourseServise {
         tags,
         status,
         isPublished,
-        publishedAt,
+        publishedAt: finalPublishedAt,
       });
+
+      // 🔥🔥🔥 POPULATE PART (IMPORTANT)
+      const populatedCourse = await Courses.findById(course._id)
+        .populate({
+          path: "instructorId",
+          select: "name email",
+        })
+        .populate({
+          path: "categoryId",
+          select: "name slug",
+        })
+        .lean();
 
       return {
         success: true,
-        data: course.toObject(),
+        data: course,
       };
     } catch (error) {
       console.error("Create course service error:", error);
@@ -269,77 +299,6 @@ export default class CourseServise {
   }
 
   // ================ GET COURSE BY SLUG ================
-  async getAllCourses(payload = {}) {
-    try {
-      const {
-        search,
-        page = 1,
-        pageSize = 10,
-        sort = "asc",
-        sortBy = "created_at",
-        level,
-        categoryId,
-        instructorId,
-        isPublished,
-        minPrice,
-        maxPrice,
-      } = payload;
-
-      const pageNumber = Math.max(Number(page) || 1, 1);
-      const limit = Math.min(Number(pageSize) || 10, 100);
-      const skip = (pageNumber - 1) * limit;
-
-      const query = {};
-
-      // 🔍 search
-      if (search) {
-        query.$or = [
-          { title: { $regex: search.trim(), $options: "i" } },
-          { description: { $regex: search.trim(), $options: "i" } },
-        ];
-      }
-
-      // 🎯 filters
-      if (level) query.level = level;
-      if (categoryId) query.categoryId = categoryId;
-      if (instructorId) query.instructorId = instructorId;
-      if (typeof isPublished === "boolean") query.isPublished = isPublished;
-
-      // 💰 price filter
-      if (minPrice || maxPrice) {
-        query.totalFee = {};
-        if (minPrice) query.totalFee.$gte = Number(minPrice);
-        if (maxPrice) query.totalFee.$lte = Number(maxPrice);
-      }
-
-      const sortOrder = sort === "desc" ? -1 : 1;
-
-      const [courses, total] = await Promise.all([
-        Courses.find(query)
-          .select("-__v")
-          .sort({ [sortBy]: sortOrder })
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        Courses.countDocuments(query),
-      ]);
-
-      return {
-        success: true,
-        data: courses,
-        pagination: {
-          total,
-          page: pageNumber,
-          pageSize: limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      };
-    } catch (error) {
-      console.error("Get all courses error:", error);
-      return { success: false, error: "Failed to fetch courses" };
-    }
-  }
-
   async getCourseById(courseId) {
     try {
       if (!mongoose.Types.ObjectId.isValid(courseId)) {
@@ -350,18 +309,16 @@ export default class CourseServise {
       }
 
       const course = await Courses.findById(courseId)
-        .select("-__v") // remove unnecessary field
+        .select("-__v")
         .populate({
           path: "instructorId",
           select: "name email profile",
-          options: { lean: true },
         })
         .populate({
           path: "categoryId",
           select: "name slug icon",
-          options: { lean: true },
         })
-        .lean(); // ⚡ BIG performance boost
+        .lean(); // correct place
 
       if (!course) {
         return {
@@ -375,8 +332,11 @@ export default class CourseServise {
         data: course,
       };
     } catch (error) {
-      console.error(" Get course by id error:", error);
-      throw error;
+      console.error("Get course by id error:", error);
+      return {
+        success: false,
+        error: "Failed to fetch course",
+      };
     }
   }
 
@@ -389,19 +349,17 @@ export default class CourseServise {
         };
       }
 
-      const course = await this.Course.findOne({ slug })
+      const course = await Courses.findOne({ slug })
         .select("-__v")
         .populate({
           path: "instructorId",
           select: "name email profile",
-          options: { lean: true },
         })
         .populate({
           path: "categoryId",
           select: "name slug icon",
-          options: { lean: true },
         })
-        .lean(); // ⚡ BIG speed boost
+        .lean();
 
       if (!course) {
         return {
@@ -415,7 +373,7 @@ export default class CourseServise {
         data: course,
       };
     } catch (error) {
-      console.error("❌ getCourseBySlug error:", error);
+      console.error("getCourseBySlug error:", error);
       return {
         success: false,
         error: "Internal server error",
@@ -436,7 +394,7 @@ export default class CourseServise {
         updated_at: new Date(),
       };
 
-      const course = await this.Course.findByIdAndUpdate(id, updatePayload, {
+      const course = await Courses.findByIdAndUpdate(id, updatePayload, {
         new: true, // return updated doc
         runValidators: true,
         lean: true, // ⚡ faster response
@@ -469,22 +427,30 @@ export default class CourseServise {
       };
     }
   }
-  async deleteCourse(id) {
+  //  constructor({ Courses, Modules, Lessons }) {
+  //     this.Course = Courses;
+  //     this.Module = Modules;
+  //     this.Lesson = Lessons;
+  //   }
+
+  // ================= DELETE COURSE =================
+  async deleteCourse(courseId) {
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
         return { success: false, error: "Invalid course id" };
       }
 
-      // ⚡ Parallel deletion (2x faster)
+      // 🔥 parallel delete
       await Promise.all([
-        this.Module.deleteMany({ courseId: id }).session(session),
-        this.Lesson.deleteMany({ courseId: id }).session(session),
+        this.Module.deleteMany({ courseId }).session(session),
+        this.Lesson.deleteMany({ courseId }).session(session),
       ]);
 
-      const course = await this.Course.findByIdAndDelete(id).session(session);
+      const course =
+        await this.Course.findByIdAndDelete(courseId).session(session);
 
       if (!course) {
         await session.abortTransaction();
@@ -495,7 +461,7 @@ export default class CourseServise {
 
       return {
         success: true,
-        message: "Course and associated content deleted successfully",
+        message: "Course, lessons and modules deleted successfully",
       };
     } catch (error) {
       await session.abortTransaction();
@@ -504,14 +470,16 @@ export default class CourseServise {
       session.endSession();
     }
   }
-  async publishCourse(id) {
+
+  // ================= PUBLISH =================
+  async publishCourse(courseId) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
         return { success: false, error: "Invalid course id" };
       }
 
-      const course = await this.Course.findByIdAndUpdate(
-        id,
+      const course = await Courses.findByIdAndUpdate(
+        courseId,
         {
           $set: {
             status: "published",
@@ -532,14 +500,16 @@ export default class CourseServise {
       return { success: false, error: error.message };
     }
   }
-  async unpublishCourse(id) {
+
+  // ================= UNPUBLISH =================
+  async unpublishCourse(courseId) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
         return { success: false, error: "Invalid course id" };
       }
 
-      const course = await this.Course.findByIdAndUpdate(
-        id,
+      const course = await Courses.findByIdAndUpdate(
+        courseId,
         {
           $set: {
             status: "draft",
@@ -563,4 +533,517 @@ export default class CourseServise {
   //   ?*************************                       *********************************
   //                                 MODULE SERVICES
   //   ?*************************                       *********************************
+
+  async createModule(payload) {
+    try {
+      const { courseId, title, description, isPublished } = payload;
+
+      // Basic validation
+      if (!courseId || !title) {
+        return {
+          status: 400,
+          success: false,
+          message: "courseId and title are required",
+          data: {},
+        };
+      }
+
+      // Get last module order for this course
+      const lastModule = await Modules.findOne({ courseId }).sort({
+        order: -1,
+      });
+
+      const nextOrder = lastModule ? lastModule.order + 1 : 1;
+
+      // Create module
+      const module = await Modules.create({
+        courseId,
+        title,
+        description,
+        order: nextOrder,
+        isPublished: isPublished ?? false,
+      });
+
+      return {
+        status: 201,
+        success: true,
+        message: "Module created successfully",
+        data: module,
+      };
+    } catch (error) {
+      console.log("Create module error:", error);
+      throw error;
+    }
+  }
+
+  // ================= GET MODULES BY COURSE =================
+  async moduleByCourseId(courseId) {
+    try {
+      if (!courseId) {
+        return {
+          status: 400,
+          success: false,
+          message: "courseId required",
+          data: [],
+        };
+      }
+
+      const modules = await Modules.find({ courseId }).sort({ order: 1 });
+
+      return {
+        status: 200,
+        success: true,
+        message: "Modules fetched successfully",
+        data: modules,
+      };
+    } catch (error) {
+      console.log("moduleByCourseId error:", error);
+      throw error;
+    }
+  }
+
+  // ================= GET MODULE BY ID =================
+  async getModulById(id) {
+    try {
+      if (!id) {
+        return {
+          status: 400,
+          success: false,
+          message: "Module id required",
+          data: {},
+        };
+      }
+
+      const module = await Modules.findById(id);
+
+      if (!module) {
+        return {
+          status: 404,
+          success: false,
+          message: "Module not found",
+          data: {},
+        };
+      }
+
+      return {
+        status: 200,
+        success: true,
+        message: "Module fetched successfully",
+        data: module,
+      };
+    } catch (error) {
+      console.log("getModulById error:", error);
+      throw error;
+    }
+  }
+
+  // ================= UPDATE MODULE =================
+  async updateModule(id, data) {
+    try {
+      if (!id) {
+        return {
+          status: 400,
+          success: false,
+          message: "Module id required",
+          data: {},
+        };
+      }
+
+      data.updated_at = Date.now();
+
+      const module = await Modules.findByIdAndUpdate(id, data, {
+        new: true,
+      });
+
+      if (!module) {
+        return {
+          status: 404,
+          success: false,
+          message: "Module not found",
+          data: {},
+        };
+      }
+
+      return {
+        status: 200,
+        success: true,
+        message: "Module updated successfully",
+        data: module,
+      };
+    } catch (error) {
+      console.log("updateModule error:", error);
+      throw error;
+    }
+  }
+
+  // ================= DELETE MODULE =================
+  async deleteModule(id) {
+    try {
+      if (!id) {
+        return {
+          status: 400,
+          success: false,
+          message: "Module id required",
+          data: {},
+        };
+      }
+
+      const module = await Modules.findByIdAndDelete(id);
+
+      if (!module) {
+        return {
+          status: 404,
+          success: false,
+          message: "Module not found",
+          data: {},
+        };
+      }
+
+      // 🔥 OPTIONAL: reorder remaining modules
+      // await this._reorderAfterDelete(module.courseId);
+
+      return {
+        status: 200,
+        success: true,
+        message: "Module deleted successfully",
+        data: {},
+      };
+    } catch (error) {
+      console.log("deleteModule error:", error);
+      throw error;
+    }
+  }
+
+  // ================= REORDER MODULES (DRAG & DROP) =================
+  async reorderModules(courseId, moduleOrders) {
+    try {
+      /**
+       * moduleOrders format:
+       * [
+       *   { moduleId: "...", order: 1 },
+       *   { moduleId: "...", order: 2 }
+       * ]
+       */
+
+      if (!courseId || !Array.isArray(moduleOrders)) {
+        return {
+          status: 400,
+          success: false,
+          message: "Invalid reorder payload",
+          data: {},
+        };
+      }
+
+      const bulkOps = moduleOrders.map((item) => ({
+        updateOne: {
+          filter: { _id: item.moduleId, courseId },
+          update: { order: item.order, updated_at: Date.now() },
+        },
+      }));
+
+      await Modules.bulkWrite(bulkOps);
+
+      return {
+        status: 200,
+        success: true,
+        message: "Modules reordered successfully",
+        data: {},
+      };
+    } catch (error) {
+      console.log("reorderModules error:", error);
+      throw error;
+    }
+  }
+
+  // ================= PRIVATE HELPER =================
+  // async _reorderAfterDelete(courseId) {
+  //   const modules = await this.Module.find({ courseId }).sort({ order: 1 });
+
+  //   const bulkOps = modules.map((m, index) => ({
+  //     updateOne: {
+  //       filter: { _id: m._id },
+  //       update: { order: index + 1 },
+  //     },
+  //   }));
+
+  //   if (bulkOps.length) {
+  //     await this.Module.bulkWrite(bulkOps);
+  //   }
+  // }
+
+  //   ?*************************                       *********************************
+  //                                 LESSON SERVICES
+  //   ?*************************                       *********************************
+
+  // ================= CREATE LESSON =================
+  async createLesson(payload) {
+    try {
+      const {
+        courseId,
+        moduleId,
+        title,
+        description,
+        content,
+        contentType,
+        videoUrl,
+        videoDuration,
+        attachments,
+        isFree,
+        isPublished,
+      } = payload;
+
+      // 🔹 Basic validation
+      if (!courseId || !title) {
+        return {
+          status: 400,
+          success: false,
+          message: "courseId and title are required",
+          data: {},
+        };
+      }
+
+      // 🔹 Find last lesson order inside same module/course
+      const lastLesson = await Lessons.findOne({ courseId, moduleId }).sort({
+        order: -1,
+      });
+
+      // 🔹 Auto increment order
+      const nextOrder = lastLesson ? lastLesson.order + 1 : 1;
+
+      // 🔹 Create lesson
+      const lesson = await Lessons.create({
+        courseId,
+        moduleId,
+        title,
+        description,
+        content,
+        contentType,
+        videoUrl,
+        videoDuration,
+        attachments,
+        order: nextOrder,
+        isFree: isFree ?? false,
+        isPublished: isPublished ?? false,
+      });
+
+      return {
+        status: 201,
+        success: true,
+        message: "Lesson created successfully",
+        data: lesson,
+      };
+    } catch (error) {
+      console.log("createLesson error", error);
+      throw error;
+    }
+  }
+
+  // ================= GET LESSONS BY COURSE =================
+  async getLessonByCourse(courseId) {
+    try {
+      // 🔹 Validate
+      if (!courseId) {
+        return {
+          status: 400,
+          success: false,
+          message: "courseId required",
+          data: [],
+        };
+      }
+
+      // 🔹 Fetch and sort
+      const lessons = await Lessons.find({ courseId }).sort({ order: 1 });
+
+      return {
+        status: 200,
+        success: true,
+        message: "Lessons fetched by course",
+        data: lessons,
+      };
+    } catch (error) {
+      console.log("getLessonByCourse error", error);
+      throw error;
+    }
+  }
+
+  // ================= GET LESSONS BY MODULE =================
+  async getLessonByModule(moduleId) {
+    try {
+      if (!moduleId) {
+        return {
+          status: 400,
+          success: false,
+          message: "moduleId required",
+          data: [],
+        };
+      }
+
+      const lessons = await Lessons.find({ moduleId }).sort({ order: 1 });
+
+      return {
+        status: 200,
+        success: true,
+        message: "Lessons fetched by module",
+        data: lessons,
+      };
+    } catch (error) {
+      console.log("getLessionByModule error", error);
+      throw error;
+    }
+  }
+
+  // ================= GET LESSON BY ID =================
+  async getLessonById(id) {
+    try {
+      if (!id) {
+        return {
+          status: 400,
+          success: false,
+          message: "lesson id required",
+          data: {},
+        };
+      }
+
+      const lesson = await Lessons.findById(id);
+
+      if (!lesson) {
+        return {
+          status: 404,
+          success: false,
+          message: "Lesson not found",
+          data: {},
+        };
+      }
+
+      return {
+        status: 200,
+        success: true,
+        message: "Lesson fetched successfully",
+        data: lesson,
+      };
+    } catch (error) {
+      console.log("getLessionById error", error);
+      throw error;
+    }
+  }
+
+  // ================= UPDATE LESSON =================
+  async updateLesson(payload) {
+    try {
+      const { id, ...updateData } = payload;
+
+      if (!id) {
+        return {
+          status: 400,
+          success: false,
+          message: "lesson id required",
+          data: {},
+        };
+      }
+
+      // 🔹 Update timestamp
+      updateData.updated_at = Date.now();
+
+      // 🔹 Update lesson
+      const lesson = await Lessons.findByIdAndUpdate(id, updateData, {
+        new: true,
+      });
+
+      if (!lesson) {
+        return {
+          status: 404,
+          success: false,
+          message: "Lesson not found",
+          data: {},
+        };
+      }
+
+      return {
+        status: 200,
+        success: true,
+        message: "Lesson updated successfully",
+        data: lesson,
+      };
+    } catch (error) {
+      console.log("updateLesson error", error);
+      throw error;
+    }
+  }
+
+  // ================= DELETE LESSON =================
+  async deleteLesson(id) {
+    try {
+      if (!id) {
+        return {
+          status: 400,
+          success: false,
+          message: "lesson id required",
+          data: {},
+        };
+      }
+
+      const lesson = await Lessons.findByIdAndDelete(id);
+
+      if (!lesson) {
+        return {
+          status: 404,
+          success: false,
+          message: "Lesson not found",
+          data: {},
+        };
+      }
+      return {
+        status: 200,
+        success: true,
+        message: "Lesson deleted successfully",
+        data: {},
+      };
+    } catch (error) {
+      console.log("deleteLesson error", error);
+      throw error;
+    }
+  }
+
+  // ================= REORDER LESSONS (DRAG & DROP) =================
+  async reOrderLesson(payload) {
+    try {
+      const { moduleId, lessonOrders } = payload;
+
+      /**
+       * lessonOrders format:
+       * [
+       *   { lessonId: "...", order: 1 }
+       * ]
+       */
+
+      if (!moduleId || !Array.isArray(lessonOrders)) {
+        return {
+          status: 400,
+          success: false,
+          message: "Invalid reorder payload",
+          data: {},
+        };
+      }
+
+      // 🔹 Prepare bulk operations (fast update)
+      const bulkOps = lessonOrders.map((item) => ({
+        updateOne: {
+          filter: { _id: item.lessonId, moduleId },
+          update: { order: item.order, updated_at: Date.now() },
+        },
+      }));
+
+      await this.Lesson.bulkWrite(bulkOps);
+
+      return {
+        status: 200,
+        success: true,
+        message: "Lessons reordered successfully",
+        data: {},
+      };
+    } catch (error) {
+      console.log("reOrderLession error", error);
+      throw error;
+    }
+  }
 }

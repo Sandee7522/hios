@@ -166,7 +166,7 @@ export const InstructorAuthentication = async (req) => {
 
     let decoded;
     try {
-      decode = jwt.verify(token, JWT_ACCESS_SECRET);
+     const decode = jwt.verify(token, JWT_ACCESS_SECRET);
     } catch (error) {
       return {
         status: false,

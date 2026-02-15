@@ -132,7 +132,7 @@ const CourseSchema = new mongoose.Schema(
     instructorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories' },
     level: { type: String, enum: ['beginner', 'intermediate', 'advanced'], default: 'beginner' },
-    language: { type: String, default: 'English' },
+    courseLanguage: { type: String, default: 'English' },
     price: { type: Number, required: true, min: 0 },
     discount: { type: Number, default: 0 },
     totalFee: { type: Number, required: true, min: 0 },

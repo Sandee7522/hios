@@ -27,3 +27,18 @@ export const ASSIGN_ROLE = `${API_URL}/auth/assignRole`;
 // **********************************            *************************************
 //                                   INSTRUCTOR API'S
 // **********************************            *************************************
+
+// instructor course api's
+export const GET_INSTRUCTOR_COURSES = `${API_URL}/instructor/courses`;
+export const CREATE_COURSE = `${API_URL}/instructor/courses/create`;
+export const UPDATE_COURSE = `${API_URL}/instructor/courses/update`;
+export const DELETE_COURSE = `${API_URL}/instructor/courses/delete`;
+
+// instructor student api's
+export const GET_COURSE_STUDENTS = `${API_URL}/instructor/students`;
+export const GET_STUDENT_PROGRESS = `${API_URL}/instructor/students/progress`;
+
+// instructor assignment api's
+export const CREATE_ASSIGNMENT = `${API_URL}/instructor/assignments/create`;
+export const GET_ASSIGNMENTS = `${API_URL}/instructor/assignments`;
+export const GRADE_ASSIGNMENT = `${API_URL}/instructor/assignments/grade`;

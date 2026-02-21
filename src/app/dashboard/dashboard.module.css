@@ -99,7 +99,7 @@
 
 .contentWrapper {
   padding: var(--dashboard-spacing-xl);
-  max-width: 1400px;
+  /* max-width: 1400px; */
 }
 
 /* ============================================
@@ -371,6 +371,25 @@
   font-size: 0.875rem;
   transition: var(--dashboard-transition);
 }
+
+/* Fix Chrome autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--dashboard-surface) inset !important;
+  -webkit-text-fill-color: var(--dashboard-text-primary) !important;
+  caret-color: var(--dashboard-text-primary);
+  transition: background-color 9999s ease-in-out 0s;
+}
+.formInput,
+.formTextarea,
+.formSelect {
+  background-color: var(--dashboard-surface) !important;
+  color: var(--dashboard-text-primary);
+}
+
 
 .formInput:focus,
 .formTextarea:focus,
@@ -732,6 +751,22 @@
 @media (max-width: 768px) {
   .mobileMenuBtn {
     display: block;
+  }
+  
+  /* Responsive navigation styles for DashboardLayout */
+  .desktopNav {
+    display: none !important;
+  }
+  
+  .mobileMenuBtnVisible {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Hide mobile nav on desktop */
+  .mobileNav {
+    display: none !important;
   }
 }
 

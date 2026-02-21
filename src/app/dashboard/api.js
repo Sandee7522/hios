@@ -1,4 +1,13 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+/**
+ * API base URL used by the frontend.
+ *
+ * In this repo you are using Next.js App Router route handlers under `src/app/api/**`.
+ * That means the safest default is calling same-origin endpoints like `/api/auth/login`.
+ *
+ * If you later deploy a separate backend, set `NEXT_PUBLIC_API_URL` to something like:
+ * - `https://your-backend.com/api`
+ */
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // **********************************            *************************************
 //                                   USERS API'S
@@ -13,6 +22,8 @@ export const RESET_PASSWORD = `${API_URL}/auth/resetPassword`;
 export const CREATE_PROFILE = `${API_URL}/auth/profile/createProfile`;
 export const UPDATE_PROFILE = `${API_URL}/auth/profile/updateProfile`;
 export const GET_POFILE_BY_ID = `${API_URL}/post/getProfileById`;
+export const GET_ALL_CATEGORY = `${API_URL}/category/getAllCategory`
+export const GET_ALL_COURSES = `${API_URL}/courses/getAllCourse`
 
 // **********************************            *************************************
 //                                   ADMIN API'S
@@ -29,10 +40,11 @@ export const ASSIGN_ROLE = `${API_URL}/auth/assignRole`;
 // **********************************            *************************************
 
 // instructor course api's
-export const GET_INSTRUCTOR_COURSES = `${API_URL}/instructor/courses`;
-export const CREATE_COURSE = `${API_URL}/instructor/courses/create`;
-export const UPDATE_COURSE = `${API_URL}/instructor/courses/update`;
-export const DELETE_COURSE = `${API_URL}/instructor/courses/delete`;
+// NOTE: These paths map to Next.js route handlers under `src/app/api/instructor/course/**`
+export const GET_INSTRUCTOR_COURSES = `${API_URL}/instructor/course/getAllCourse`;
+export const CREATE_COURSE = `${API_URL}/instructor/course/createCourse`;
+export const UPDATE_COURSE = `${API_URL}/instructor/course/updateCourse`;
+export const GET_INSTRUCTOR_COURSE_BY_ID = `${API_URL}/instructor/course/getCourseById`;
 
 // instructor student api's
 export const GET_COURSE_STUDENTS = `${API_URL}/instructor/students`;

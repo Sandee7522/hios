@@ -13,7 +13,7 @@ export default function About() {
 
     return (
         <section id="about" className="py-20 md:py-32 bg-[#020617] relative overflow-hidden">
-            <div className="absolute top-1/2 left-0 -z-10 w-[500px] h-[500px] bg-blue-900/10 rounded-full blur-[120px] opacity-30" />
+            <div className="absolute top-1/2 left-0 -z-10 w-125 h-125 bg-blue-900/10 rounded-full blur-[120px] opacity-30" />
 
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20">
@@ -25,7 +25,7 @@ export default function About() {
                             transition={{ duration: 0.5 }}
                             className="relative group"
                         >
-                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl opacity-30 blur-lg group-hover:opacity-50 transition-opacity duration-500" />
+                            <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-cyan-500 rounded-2xl opacity-30 blur-lg group-hover:opacity-50 transition-opacity duration-500" />
                             <img
                                 src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop"
                                 alt="About Hamsa Institute"

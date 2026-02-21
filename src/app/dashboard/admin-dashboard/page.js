@@ -3,36 +3,89 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '../component/DashboardLayout';
 import styles from '../dashboard.module.css';
-import { getUserProfile } from '../utils/auth';
+import { getUserProfile, getUserRole } from '../utils/auth';
+import { GET_ALL_USERS, GET_ALL_ROLES } from '../api';
+import { requestWithAuth } from '../utils/apiClient';
+import Footer from '@/components/landing/Footer';
 
 export default function AdminDashboard() {
   const [profile, setProfile] = useState(null);
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showRoleModal, setShowRoleModal] = useState(false);
 
   useEffect(() => {
-    // Load admin profile
     const userProfile = getUserProfile();
     setProfile(userProfile);
 
-    // Mock data for demonstration - replace with actual API calls
-    setUsers([
-      { id: 1, name: 'John Doe', email: 'john@example.com', role: 'user', status: 'active', joinDate: '2024-01-15' },
-      { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'instructor', status: 'active', joinDate: '2024-02-20' },
-      { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'user', status: 'active', joinDate: '2024-03-10' },
-      { id: 4, name: 'Sarah Williams', email: 'sarah@example.com', role: 'instructor', status: 'inactive', joinDate: '2024-01-05' },
-      { id: 5, name: 'Tom Brown', email: 'tom@example.com', role: 'admin', status: 'active', joinDate: '2023-12-01' },
-    ]);
+    // Guard this page so only admins can load admin data
+    const role = getUserRole();
+    if (role !== 'admin') {
+      setError('You do not have permission to view the admin dashboard.');
+      setLoading(false);
+      return;
+    }
 
-    setRoles([
-      { id: 1, name: 'admin', users: 2, permissions: 'Full Access' },
-      { id: 2, name: 'instructor', users: 15, permissions: 'Course Management' },
-      { id: 3, name: 'user', users: 105, permissions: 'Basic Access' },
-    ]);
+    const fetchData = async () => {
+      try {
+        // 1) Fetch users list (admin-only endpoint)
+        const usersResponse = await requestWithAuth(GET_ALL_USERS, {
+          method: 'POST',
+          body: {
+            page: 1,
+            pageSize: 20,
+            sort: 'desc',
+          },
+          allowedRoles: ['admin'],
+        });
 
-    setLoading(false);
+        // API helper wraps data in { status, message, data }
+        const usersData = usersResponse?.data?.users || [];
+
+        // Normalize users into the shape required by the table UI
+        const mappedUsers = usersData.map((user) => ({
+          id: user.id || user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role?.user_type || 'user',
+          status: user.isEmailVerified ? 'active' : 'inactive',
+          joinDate: user.created_at
+            ? new Date(user.created_at).toISOString().slice(0, 10)
+            : '',
+        }));
+
+        // 2) Fetch roles list (admin-only endpoint)
+        const rolesResponse = await requestWithAuth(GET_ALL_ROLES, {
+          method: 'GET',
+          allowedRoles: ['admin'],
+        });
+
+        const rolesData = rolesResponse?.data || [];
+
+        // Normalize roles into the cards we already render
+        const mappedRoles = rolesData.map((roleItem) => ({
+          id: roleItem._id,
+          name: roleItem.user_type,
+          users: roleItem.userCount || 0,
+          permissions:
+            Array.isArray(roleItem.permissions) && roleItem.permissions.length > 0
+              ? `${roleItem.permissions.length} permissions`
+              : 'No permissions configured',
+        }));
+
+        setUsers(mappedUsers);
+        setRoles(mappedRoles);
+      } catch (err) {
+        console.error('Admin dashboard data load error:', err);
+        setError(err.message || 'Failed to load admin data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const getRoleBadgeStyle = (role) => {
@@ -61,8 +114,25 @@ export default function AdminDashboard() {
   }
 
   return (
+    <>
     <DashboardLayout role="admin">
       <div className={styles.fadeIn}>
+        {/* Permission / error message */}
+        {error && (
+          <div
+            style={{
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              borderRadius: 'var(--dashboard-radius-md)',
+              backgroundColor: 'var(--dashboard-danger-light)',
+              color: 'var(--dashboard-danger)',
+              fontSize: '0.875rem',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className={styles.mb3}>
           <h1 className={styles.headerTitle}>Admin Dashboard ⚡</h1>
@@ -217,5 +287,7 @@ export default function AdminDashboard() {
         </div>
       </div>
     </DashboardLayout>
+     <Footer />
+    </>
   );
 }

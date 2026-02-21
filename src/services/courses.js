@@ -276,21 +276,21 @@ export default class CourseServises {
         publishedAt: finalPublishedAt,
       });
 
-      // 🔥🔥🔥 POPULATE PART (IMPORTANT)
+      // 🔥 Populate instructor name and category name
       const populatedCourse = await Courses.findById(course._id)
         .populate({
           path: "instructorId",
-          select: "name email",
+          select: "name", // Only name
         })
         .populate({
           path: "categoryId",
-          select: "name slug",
+          select: "name", // Only name
         })
         .lean();
 
       return {
         success: true,
-        data: course,
+        data: populatedCourse,
       };
     } catch (error) {
       console.error("Create course service error:", error);
@@ -298,6 +298,84 @@ export default class CourseServises {
     }
   }
 
+  async getAllCourses(payload = {}) {
+    try {
+      const {
+        search,
+        page = 1,
+        pageSize = 10,
+        sort = "asc",
+        sortBy = "created_at",
+        level,
+        categoryId,
+        instructorId,
+        isPublished,
+        minPrice,
+        maxPrice,
+      } = payload;
+
+      const pageNumber = Math.max(Number(page) || 1, 1);
+      const limit = Math.min(Number(pageSize) || 10, 100);
+      const skip = (pageNumber - 1) * limit;
+
+      const query = {};
+
+      // 🔍 search
+      if (search) {
+        query.$or = [
+          { title: { $regex: search.trim(), $options: "i" } },
+          { description: { $regex: search.trim(), $options: "i" } },
+        ];
+      }
+
+      // 🎯 filters
+      if (level) query.level = level;
+      if (categoryId) query.categoryId = categoryId;
+      if (instructorId) query.instructorId = instructorId;
+      if (typeof isPublished === "boolean") query.isPublished = isPublished;
+
+      // 💰 price filter
+      if (minPrice || maxPrice) {
+        query.totalFee = {};
+        if (minPrice) query.totalFee.$gte = Number(minPrice);
+        if (maxPrice) query.totalFee.$lte = Number(maxPrice);
+      }
+
+      const sortOrder = sort === "desc" ? -1 : 1;
+
+      const [courses, total] = await Promise.all([
+        Courses.find(query)
+          .select("-__v")
+          .sort({ [sortBy]: sortOrder })
+          .skip(skip)
+          .limit(limit)
+          .populate({
+            path: "instructorId",
+            select: "name", // Only name
+          })
+          .populate({
+            path: "categoryId",
+            select: "name", // Only name
+          })
+          .lean(),
+        Courses.countDocuments(query),
+      ]);
+
+      return {
+        success: true,
+        data: courses,
+        pagination: {
+          total,
+          page: pageNumber,
+          pageSize: limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      console.error("Get all courses error:", error);
+      return { success: false, error: "Failed to fetch courses" };
+    }
+  }
   // ================ GET COURSE BY SLUG ================
   async getCourseById(courseId) {
     try {

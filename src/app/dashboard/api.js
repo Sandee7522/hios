@@ -24,7 +24,7 @@ export const UPDATE_PROFILE = `${API_URL}/auth/profile/updateProfile`;
 export const GET_POFILE_BY_ID = `${API_URL}/post/getProfileById`;
 export const GET_ALL_CATEGORY = `${API_URL}/category/getAllCategory`
 export const GET_ALL_COURSES = `${API_URL}/courses/getAllCourse`
-
+export const GET_COURSE_BY_SLUG = (slug) => `${API_URL}/courses/${slug}`;
 // **********************************            *************************************
 //                                   ADMIN API'S
 // **********************************            *************************************

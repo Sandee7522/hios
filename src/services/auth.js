@@ -243,6 +243,8 @@ export default class AuthService {
         dateOfBirth,
         address,
         socialLinks,
+        profileImage,
+        profileImageId,
       } = payload;
 
       const existingProfile = await UserDetails.findOne({ user_id });
@@ -261,6 +263,8 @@ export default class AuthService {
         dateOfBirth,
         address,
         socialLinks,
+        profileImage,
+        profileImageId,
       });
 
       console.log("Profile created::::::::::::::::::: ", profile);
@@ -313,6 +317,8 @@ export default class AuthService {
         dateOfBirth,
         address,
         socialLinks,
+        profileImage,
+        profileImageId,
       } = payload;
 
       console.log("Update profile :::::::::::", payload);
@@ -326,6 +332,8 @@ export default class AuthService {
           dateOfBirth,
           address,
           socialLinks,
+          ...(profileImage && { profileImage }),
+          ...(profileImageId && { profileImageId }),
         },
         { new: true },
       );

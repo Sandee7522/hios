@@ -61,6 +61,7 @@ const UserDetailsSchema = new mongoose.Schema(
   {
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
     profileImage: { type: String },
+    profileImageId: {type: String},
     bio: { type: String },
     phone: { type: String },
     username: { type: String },
@@ -128,6 +129,7 @@ const CourseSchema = new mongoose.Schema(
     description: { type: String, required: true },
     shortDescription: { type: String },
     thumbnail: { type: String },
+    thumbnailId: { type: String },
     previewVideo: { type: String },
     instructorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Categories' },

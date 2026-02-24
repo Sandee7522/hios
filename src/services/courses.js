@@ -618,12 +618,15 @@ export default class CourseServises {
     try {
       const { courseId, title, description, isPublished } = payload;
 
-      // Basic validation
-      if (!courseId || !title) {
+      const existingModule = await Modules.findOne({
+        courseId,
+        title: { $regex: new RegExp(`^${title}$`, "i") },
+      });
+      if (existingModule) {
         return {
           status: 400,
           success: false,
-          message: "courseId and title are required",
+          message: "Module with this title already exists in the course",
           data: {},
         };
       }
@@ -641,7 +644,7 @@ export default class CourseServises {
         title,
         description,
         order: nextOrder,
-        isPublished: isPublished ?? false,
+        isPublished: isPublished ?? true,
       });
 
       return {
@@ -659,15 +662,6 @@ export default class CourseServises {
   // ================= GET MODULES BY COURSE =================
   async moduleByCourseId(courseId) {
     try {
-      if (!courseId) {
-        return {
-          status: 400,
-          success: false,
-          message: "courseId required",
-          data: [],
-        };
-      }
-
       const modules = await Modules.find({ courseId }).sort({ order: 1 });
 
       return {
@@ -685,15 +679,6 @@ export default class CourseServises {
   // ================= GET MODULE BY ID =================
   async getModulById(id) {
     try {
-      if (!id) {
-        return {
-          status: 400,
-          success: false,
-          message: "Module id required",
-          data: {},
-        };
-      }
-
       const module = await Modules.findById(id);
 
       if (!module) {
@@ -720,15 +705,6 @@ export default class CourseServises {
   // ================= UPDATE MODULE =================
   async updateModule(id, data) {
     try {
-      if (!id) {
-        return {
-          status: 400,
-          success: false,
-          message: "Module id required",
-          data: {},
-        };
-      }
-
       data.updated_at = Date.now();
 
       const module = await Modules.findByIdAndUpdate(id, data, {
@@ -759,15 +735,6 @@ export default class CourseServises {
   // ================= DELETE MODULE =================
   async deleteModule(id) {
     try {
-      if (!id) {
-        return {
-          status: 400,
-          success: false,
-          message: "Module id required",
-          data: {},
-        };
-      }
-
       const module = await Modules.findByIdAndDelete(id);
 
       if (!module) {
@@ -797,14 +764,6 @@ export default class CourseServises {
   // ================= REORDER MODULES (DRAG & DROP) =================
   async reorderModules(courseId, moduleOrders) {
     try {
-      /**
-       * moduleOrders format:
-       * [
-       *   { moduleId: "...", order: 1 },
-       *   { moduleId: "...", order: 2 }
-       * ]
-       */
-
       if (!courseId || !Array.isArray(moduleOrders)) {
         return {
           status: 400,

@@ -174,7 +174,7 @@ const ModuleSchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String },
     order: { type: Number, required: true },
-    isPublished: { type: Boolean, default: false },
+    isPublished: { type: Boolean, default: true },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
   },

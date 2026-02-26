@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import DashboardLayout from "../component/DashboardLayout";
 import styles from "../dashboard.module.css";
@@ -8,12 +9,15 @@ import { getUserProfile, getUserRole } from "../utils/auth";
 import { GET_ALL_COURSES } from "../api";
 import { requestWithAuth } from "../utils/apiClient";
 import Footer from "@/components/landing/Footer";
+import { useRouter } from "next/navigation";
 
 export default function UserDashboard() {
   const [profile, setProfile] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const router = useRouter();
+
 
   /**
    * Format duration object {hours, minutes} to readable string
@@ -339,17 +343,11 @@ export default function UserDashboard() {
 
                       {/* Action Button */}
                       <button
-                        className={`
-                          ${styles.btn} 
-                          ${styles.btnSecondary} 
-                          mt-[-4px
-                          w-full 
-                          py-3 
-                          text-sm md:text-base
-                        `}
-                      >
-                        Continue to Payment →
-                      </button>
+  className={`${styles.btn} ${styles.btnSecondary} mt-[-4px w-full py-3 text-sm md:text-base`}
+  onClick={() => router.push(`/dashboard/user-dashboard/components/${course.slug}`)}
+>
+  Continue
+</button>
                     </div>
                   </div>
                 ))}

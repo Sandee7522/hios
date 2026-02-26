@@ -167,6 +167,20 @@ CourseSchema.pre('save', function () {
   this.updated_at = Date.now();
 });
 
+const CourseDetailsSchema = new mongoose.Schema({
+  courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses', required: true, unique: true },
+  instructorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+  detailedDescription: { type: String },
+  courseOutline: { type: String },
+  teacherImg: { type: String },
+  teacherName: { type: String },
+  teacherDesignation: { type: String },
+  demoVideo: { type: String },
+
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now }
+})
+
 /* =====================  MODULE SCHEMA  ===================== */
 const ModuleSchema = new mongoose.Schema(
   {
@@ -193,18 +207,9 @@ const LessonSchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String },
     content: { type: String },
-    contentType: { type: String, enum: ['video', 'text', 'quiz', 'assignment', 'document'], default: 'video' },
     videoUrl: { type: String },
-    videoDuration: { type: Number }, // in seconds
-    attachments: [{
-      name: { type: String },
-      url: { type: String },
-      type: { type: String },
-      size: { type: Number }
-    }],
     order: { type: Number, required: true },
-    isFree: { type: Boolean, default: false },
-    isPublished: { type: Boolean, default: false },
+    isPublished: { type: Boolean, default: true },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }
   },

@@ -823,23 +823,9 @@ export default class CourseServises {
         title,
         description,
         content,
-        contentType,
         videoUrl,
-        videoDuration,
-        attachments,
-        isFree,
         isPublished,
       } = payload;
-
-      // 🔹 Basic validation
-      if (!courseId || !title) {
-        return {
-          status: 400,
-          success: false,
-          message: "courseId and title are required",
-          data: {},
-        };
-      }
 
       // 🔹 Find last lesson order inside same module/course
       const lastLesson = await Lessons.findOne({ courseId, moduleId }).sort({
@@ -856,21 +842,12 @@ export default class CourseServises {
         title,
         description,
         content,
-        contentType,
         videoUrl,
-        videoDuration,
-        attachments,
         order: nextOrder,
-        isFree: isFree ?? false,
         isPublished: isPublished ?? false,
       });
 
-      return {
-        status: 201,
-        success: true,
-        message: "Lesson created successfully",
-        data: lesson,
-      };
+      return lesson;
     } catch (error) {
       console.log("createLesson error", error);
       throw error;
@@ -880,16 +857,6 @@ export default class CourseServises {
   // ================= GET LESSONS BY COURSE =================
   async getLessonByCourse(courseId) {
     try {
-      // 🔹 Validate
-      if (!courseId) {
-        return {
-          status: 400,
-          success: false,
-          message: "courseId required",
-          data: [],
-        };
-      }
-
       // 🔹 Fetch and sort
       const lessons = await Lessons.find({ courseId }).sort({ order: 1 });
 
@@ -908,17 +875,16 @@ export default class CourseServises {
   // ================= GET LESSONS BY MODULE =================
   async getLessonByModule(moduleId) {
     try {
-      if (!moduleId) {
-        return {
-          status: 400,
-          success: false,
-          message: "moduleId required",
-          data: [],
-        };
-      }
-
       const lessons = await Lessons.find({ moduleId }).sort({ order: 1 });
 
+      if (!lessons) {
+        return {
+          status: 404,
+          success: false,
+          message: "Lessons not found",
+          data: {},
+        };
+      }
       return {
         status: 200,
         success: true,
@@ -934,15 +900,6 @@ export default class CourseServises {
   // ================= GET LESSON BY ID =================
   async getLessonById(id) {
     try {
-      if (!id) {
-        return {
-          status: 400,
-          success: false,
-          message: "lesson id required",
-          data: {},
-        };
-      }
-
       const lesson = await Lessons.findById(id);
 
       if (!lesson) {
@@ -1012,15 +969,6 @@ export default class CourseServises {
   // ================= DELETE LESSON =================
   async deleteLesson(id) {
     try {
-      if (!id) {
-        return {
-          status: 400,
-          success: false,
-          message: "lesson id required",
-          data: {},
-        };
-      }
-
       const lesson = await Lessons.findByIdAndDelete(id);
 
       if (!lesson) {
@@ -1044,45 +992,38 @@ export default class CourseServises {
   }
 
   // ================= REORDER LESSONS (DRAG & DROP) =================
-  async reOrderLesson(payload) {
-    try {
-      const { moduleId, lessonOrders } = payload;
+  // async reOrderLesson(payload) {
+  //   try {
+  //     const { moduleId, lessonOrders } = payload;
 
-      /**
-       * lessonOrders format:
-       * [
-       *   { lessonId: "...", order: 1 }
-       * ]
-       */
+  //     if (!moduleId || !Array.isArray(lessonOrders)) {
+  //       return {
+  //         status: 400,
+  //         success: false,
+  //         message: "Invalid reorder payload",
+  //         data: {},
+  //       };
+  //     }
 
-      if (!moduleId || !Array.isArray(lessonOrders)) {
-        return {
-          status: 400,
-          success: false,
-          message: "Invalid reorder payload",
-          data: {},
-        };
-      }
+  //     // 🔹 Prepare bulk operations (fast update)
+  //     const bulkOps = lessonOrders.map((item) => ({
+  //       updateOne: {
+  //         filter: { _id: item.lessonId, moduleId },
+  //         update: { order: item.order, updated_at: Date.now() },
+  //       },
+  //     }));
 
-      // 🔹 Prepare bulk operations (fast update)
-      const bulkOps = lessonOrders.map((item) => ({
-        updateOne: {
-          filter: { _id: item.lessonId, moduleId },
-          update: { order: item.order, updated_at: Date.now() },
-        },
-      }));
+  //     await this.Lesson.bulkWrite(bulkOps);
 
-      await this.Lesson.bulkWrite(bulkOps);
-
-      return {
-        status: 200,
-        success: true,
-        message: "Lessons reordered successfully",
-        data: {},
-      };
-    } catch (error) {
-      console.log("reOrderLession error", error);
-      throw error;
-    }
-  }
+  //     return {
+  //       status: 200,
+  //       success: true,
+  //       message: "Lessons reordered successfully",
+  //       data: {},
+  //     };
+  //   } catch (error) {
+  //     console.log("reOrderLession error", error);
+  //     throw error;
+  //   }
+  // }
 }

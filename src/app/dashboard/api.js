@@ -27,7 +27,7 @@ export const GET_ALL_COURSES = `${API_URL}/courses/getAllCourse`;
 export const GET_COURSE_BY_SLUG = (slug) => `${API_URL}/courses/${slug}`;
 export const GET_ALL_MODULES_BYID = `${API_URL}/admin/module/getAllModules`;
 export const MODULE_BY_COURSEID = `${API_URL}/admin/module/getModuleById`;
-export const GET_LESSON = `${API}/admin/lesson/getLesson`;
+export const GET_LESSON = `${API_URL}/admin/lesson/getLesson`;
 
 // **********************************            *************************************
 //                                   ADMIN API'S
@@ -51,7 +51,7 @@ export const MODULE_BY_COURSEID_ADMIN = `${API_URL}/admin/module/getModuleById`;
 export const RECODER_MODULE_ADMIN = `${API_URL}/admin/module/recodeModule`;
 export const CREATE_LESSON_ADMIN = `${API_URL}/admin/lesson/createLesson`;
 export const DELETE_LESSON_ADMIN = `${API_URL}/admin/lesson/deleteLesson`;
-export const GET_LESSON_ADMIN = `${API}/admin/lesson/getLesson`;
+export const GET_LESSON_ADMIN = `${API_URL}/admin/lesson/getLesson`;
 export const RE_ORDER_LESSON = `${API_URL}/admin/lesson/reOrderLesson`;
 export const UPDATE_LESSON = `${API_URL}/admin/lesson/updateLesson`;
 

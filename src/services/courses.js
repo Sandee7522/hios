@@ -860,12 +860,7 @@ export default class CourseServises {
       // 🔹 Fetch and sort
       const lessons = await Lessons.find({ courseId }).sort({ order: 1 });
 
-      return {
-        status: 200,
-        success: true,
-        message: "Lessons fetched by course",
-        data: lessons,
-      };
+      return lessons;
     } catch (error) {
       console.log("getLessonByCourse error", error);
       throw error;
@@ -885,12 +880,7 @@ export default class CourseServises {
           data: {},
         };
       }
-      return {
-        status: 200,
-        success: true,
-        message: "Lessons fetched by module",
-        data: lessons,
-      };
+      return lessons;
     } catch (error) {
       console.log("getLessionByModule error", error);
       throw error;
@@ -911,12 +901,7 @@ export default class CourseServises {
         };
       }
 
-      return {
-        status: 200,
-        success: true,
-        message: "Lesson fetched successfully",
-        data: lesson,
-      };
+      return lesson;
     } catch (error) {
       console.log("getLessionById error", error);
       throw error;

@@ -342,45 +342,45 @@ ReviewSchema.pre('save', function () {
   this.updated_at = Date.now();
 });
 
-/* =====================  QUESTION SCHEMA  ===================== */
-const QuestionSchema = new mongoose.Schema(
-  {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-    lessonId: { type: mongoose.Schema.Types.ObjectId, ref: 'Lessons', required: true },
-    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses', required: true },
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    isAnswered: { type: Boolean, default: false },
-    upvotes: { type: Number, default: 0 },
-    isPinned: { type: Boolean, default: false },
-    created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
-  },
-  { collection: 'questions' }
-);
+// /* =====================  QUESTION SCHEMA  ===================== */
+// const QuestionSchema = new mongoose.Schema(
+//   {
+//     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+//     lessonId: { type: mongoose.Schema.Types.ObjectId, ref: 'Lessons', required: true },
+//     courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses', required: true },
+//     title: { type: String, required: true },
+//     content: { type: String, required: true },
+//     isAnswered: { type: Boolean, default: false },
+//     upvotes: { type: Number, default: 0 },
+//     isPinned: { type: Boolean, default: false },
+//     created_at: { type: Date, default: Date.now },
+//     updated_at: { type: Date, default: Date.now }
+//   },
+//   { collection: 'questions' }
+// );
 
-QuestionSchema.pre('save', function () {
-  this.updated_at = Date.now();
-});
+// QuestionSchema.pre('save', function () {
+//   this.updated_at = Date.now();
+// });
 
-/* =====================  ANSWER SCHEMA  ===================== */
-const AnswerSchema = new mongoose.Schema(
-  {
-    questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Questions', required: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-    content: { type: String, required: true },
-    isInstructorAnswer: { type: Boolean, default: false },
-    isAccepted: { type: Boolean, default: false },
-    upvotes: { type: Number, default: 0 },
-    created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
-  },
-  { collection: 'answers' }
-);
+// /* =====================  ANSWER SCHEMA  ===================== */
+// const AnswerSchema = new mongoose.Schema(
+//   {
+//     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Questions', required: true },
+//     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+//     content: { type: String, required: true },
+//     isInstructorAnswer: { type: Boolean, default: false },
+//     isAccepted: { type: Boolean, default: false },
+//     upvotes: { type: Number, default: 0 },
+//     created_at: { type: Date, default: Date.now },
+//     updated_at: { type: Date, default: Date.now }
+//   },
+//   { collection: 'answers' }
+// );
 
-AnswerSchema.pre('save', function () {
-  this.updated_at = Date.now();
-});
+// AnswerSchema.pre('save', function () {
+//   this.updated_at = Date.now();
+// });
 
 /* =====================  NOTIFICATION SCHEMA  ===================== */
 const NotificationSchema = new mongoose.Schema(
@@ -487,60 +487,82 @@ EarningsSchema.pre('save', function () {
 });
 
 /* =====================  QUIZ SCHEMA  ===================== */
-const QuizSchema = new mongoose.Schema(
-  {
-    lessonId: { type: mongoose.Schema.Types.ObjectId, ref: 'Lessons', required: true },
-    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses', required: true },
-    title: { type: String, required: true },
-    description: { type: String },
-    timeLimit: { type: Number }, // in minutes
-    passingScore: { type: Number, default: 70, min: 0, max: 100 },
-    questions: [{
-      question: { type: String, required: true },
-      questionType: { type: String, enum: ['multiple_choice', 'true_false', 'short_answer'], default: 'multiple_choice' },
-      options: [{ type: String }],
-      correctAnswer: { type: mongoose.Schema.Types.Mixed },
-      explanation: { type: String },
-      points: { type: Number, default: 1 }
-    }],
-    totalPoints: { type: Number },
-    attempts: { type: Number, default: 3 },
-    created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
-  },
-  { collection: 'quizzes' }
+const QuizSchema = new mongoose.Schema({
+  userId:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:true,index:true},
+  lessonId:{type:mongoose.Schema.Types.ObjectId,ref:"Lecture",required:true,index:true},
+  courseId:{type:mongoose.Schema.Types.ObjectId,ref:"Course",required:true,index:true},
+  type:{type:String,enum:["discussion","mcq"],default:"discussion",required:true},
+  title:{type:String,required:true,trim:true,maxlength:200},
+  content:{type:String,required:true,trim:true},
+  options:[{text:{type:String,required:function(){return this.type==="mcq";}},isCorrect:{type:Boolean,default:false}}],
+  explanation:{type:String,trim:true},
+  points:{type:Number,default:1},
+  difficulty:{type:String,enum:["easy","medium","hard"],default:"medium"},
+  isAnswered:{type:Boolean,default:false},
+  acceptedAnswerId:{type:mongoose.Schema.Types.ObjectId,ref:"Answer"},
+  created_at:{type:Date,default:Date.now},
+  updated_at:{type:Date,default:Date.now}
+},
+{collection:"questions"}
 );
 
-QuizSchema.pre('save', function () {
-  this.updated_at = Date.now();
+QuizSchema.index({courseId:1,created_at:-1});
+QuizSchema.index({lessonId:1,created_at:-1});
+QuizSchema.index({userId:1});
+QuizSchema.index({type:1});
+QuizSchema.index({tags:1});
+
+QuizSchema.virtual("hasCorrectAnswer").get(function(){if(this.type!=="mcq") return null; return this.options.some(o=>o.isCorrect);});
+
+QuizSchema.pre("save",function(next){
+  if(this.type==="mcq"){
+    if(this.options.length!==4) return next(new Error("MCQ must have exactly 4 options"));
+    const correct=this.options.filter(o=>o.isCorrect);
+    if(correct.length!==1) return next(new Error("MCQ must have exactly 1 correct answer"));
+  }
+  next();
 });
 
-/* =====================  QUIZ ATTEMPT SCHEMA  ===================== */
-const QuizAttemptSchema = new mongoose.Schema(
-  {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-    quizId: { type: mongoose.Schema.Types.ObjectId, ref: 'Quizzes', required: true },
-    answers: [{
-      questionId: { type: mongoose.Schema.Types.ObjectId },
-      answer: { type: mongoose.Schema.Types.Mixed },
-      isCorrect: { type: Boolean },
-      pointsEarned: { type: Number }
-    }],
-    score: { type: Number, required: true },
-    percentage: { type: Number, required: true },
-    passed: { type: Boolean, default: false },
-    timeSpent: { type: Number }, // in seconds
-    attemptNumber: { type: Number, required: true },
-    completedAt: { type: Date, default: Date.now },
-    created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
-  },
-  { collection: 'quiz_attempts' }
+
+/* ========================= ANSWER ========================= */
+const QuizAttemptSchema=new mongoose.Schema({
+  questionId:{type:mongoose.Schema.Types.ObjectId,ref:"Question",required:true,index:true},
+  userId:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:true,index:true},
+  content:{type:String,required:true,trim:true},
+  isInstructorAnswer:{type:Boolean,default:false},
+  isAccepted:{type:Boolean,default:false},
+  created_at:{type:Date,default:Date.now},
+  updated_at:{type:Date,default:Date.now}
+},
+
+{collection:"answers"}
 );
 
-QuizAttemptSchema.pre('save', function () {
-  this.updated_at = Date.now();
+QuizAttemptSchema.index({questionId:1,created_at:-1});
+QuizAttemptSchema.index({userId:1});
+QuizAttemptSchema.index({isInstructorAnswer:1});
+
+QuizAttemptSchema.post("save",async function(){
+  const QuestionModel=mongoose.model("Question");
+  await QuestionModel.findByIdAndUpdate(this.questionId,{$inc:{answerCount:1},isAnswered:true});
 });
+
+/* ========================= MCQ ATTEMPT ========================= */
+const MCQAttemptSchema=new mongoose.Schema({
+  userId:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:true,index:true},
+  questionId:{type:mongoose.Schema.Types.ObjectId,ref:"Question",required:true,index:true},
+  courseId:{type:mongoose.Schema.Types.ObjectId,ref:"Course",required:true},
+  lessonId:{type:mongoose.Schema.Types.ObjectId,ref:"Lecture",required:true},
+  selectedOptionIndex:{type:Number,required:true,min:0,max:3},
+  isCorrect:{type:Boolean,required:true},
+  pointsEarned:{type:Number,default:0},
+  timeTaken:{type:Number},
+  attempted_at:{type:Date,default:Date.now}
+},
+{collection:"mcq_attempts"});
+
+MCQAttemptSchema.index({userId:1,questionId:1},{unique:true});
+
 
 /* =====================  ACTIVITY LOG SCHEMA  ===================== */
 const ActivityLogSchema = new mongoose.Schema(
@@ -688,14 +710,15 @@ export const Enrollments = mongoose.models.Enrollments || mongoose.model('Enroll
 export const Progress = mongoose.models.Progress || mongoose.model('Progress', ProgressSchema);
 export const Payments = mongoose.models.Payments || mongoose.model('Payments', PaymentSchema);
 export const Reviews = mongoose.models.Reviews || mongoose.model('Reviews', ReviewSchema);
-export const Questions = mongoose.models.Questions || mongoose.model('Questions', QuestionSchema);
-export const Answers = mongoose.models.Answers || mongoose.model('Answers', AnswerSchema);
+// export const Questions = mongoose.models.Questions || mongoose.model('Questions', QuestionSchema);
+// export const Answers = mongoose.models.Answers || mongoose.model('Answers', AnswerSchema);
 export const Notifications = mongoose.models.Notifications || mongoose.model('Notifications', NotificationSchema);
 export const Certificates = mongoose.models.Certificates || mongoose.model('Certificates', CertificateSchema);
 export const InstructorApplications = mongoose.models.InstructorApplications || mongoose.model('InstructorApplications', InstructorApplicationSchema);
 export const Earnings = mongoose.models.Earnings || mongoose.model('Earnings', EarningsSchema);
 export const Quizzes = mongoose.models.Quizzes || mongoose.model('Quizzes', QuizSchema);
 export const QuizAttempts = mongoose.models.QuizAttempts || mongoose.model('QuizAttempts', QuizAttemptSchema);
+export const MCQAttempt = mongoose.models.MCQAttempt || mongoose.model("MCQAttempt", MCQAttemptSchema);
 export const ActivityLogs = mongoose.models.ActivityLogs || mongoose.model('ActivityLogs', ActivityLogSchema);
 export const Reports = mongoose.models.Reports || mongoose.model('Reports', ReportSchema);
 export const AIRecommendations = mongoose.models.AIRecommendations || mongoose.model('AIRecommendations', AIRecommendationSchema);

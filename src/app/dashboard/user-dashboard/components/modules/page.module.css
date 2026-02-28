@@ -1,0 +1,221 @@
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+}
+
+.sidebarTitle {
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.menuItem {
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #1e293b;
+  border-radius: 6px;
+  cursor: default; /* not clickable */
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Cards */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cardTitle {
+  margin-bottom: 16px;
+}
+
+/* Video */
+.videoBox {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Quiz */
+.quizBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+/* ===== Container ===== */
+.container {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+  height: 60px;
+  background: #0f172a;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.menuBtn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: none;
+}
+
+/* ===== Layout ===== */
+.wrapper {
+  display: flex;
+  min-height: calc(100vh - 60px);
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: 220px;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+  transition: transform 0.3s ease;
+}
+
+.sidebarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebarTitle {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.closeBtn {
+  display: none;
+  cursor: pointer;
+}
+
+.menuItem {
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #1e293b;
+  border-radius: 6px;
+  cursor: default;
+}
+
+/* ===== Main ===== */
+.main {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cardTitle {
+  margin-bottom: 16px;
+}
+
+/* ===== Video ===== */
+.videoBox {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ===== Quiz ===== */
+.quizBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+/* ===== Overlay ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 900;
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 768px) {
+  .menuBtn {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    height: calc(100vh - 60px);
+    transform: translateX(-100%);
+    z-index: 1001;
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .closeBtn {
+    display: block;
+  }
+
+  .wrapper {
+    flex-direction: column;
+  }
+
+  .main {
+    padding: 16px;
+  }
+}

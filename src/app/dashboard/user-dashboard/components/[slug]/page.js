@@ -6,6 +6,7 @@ import { GET_COURSE_BY_SLUG } from "../../../api";
 import styles from "../../../dashboard.module.css";
 import DashboardLayout from "@/app/dashboard/component/DashboardLayout";
 import { requestWithAuth } from "@/app/dashboard/utils/apiClient";
+import Link from "next/link";
 
 /* ================= HELPERS ================= */
 
@@ -46,13 +47,10 @@ export default function CourseDetailPage() {
         setLoading(true);
         setError("");
 
-        const response = await requestWithAuth(
-          GET_COURSE_BY_SLUG(slug),
-          {
-            method: "GET",
-            allowedRoles: ["user", "student"],
-          }
-        );
+        const response = await requestWithAuth(GET_COURSE_BY_SLUG(slug), {
+          method: "GET",
+          allowedRoles: ["user", "student"],
+        });
 
         console.log("API response:", response);
 
@@ -172,9 +170,7 @@ export default function CourseDetailPage() {
               {course.courseLanguage && (
                 <p>
                   Language:{" "}
-                  <span className="capitalize">
-                    {course.courseLanguage}
-                  </span>
+                  <span className="capitalize">{course.courseLanguage}</span>
                 </p>
               )}
 
@@ -192,15 +188,14 @@ export default function CourseDetailPage() {
               <div className="mb-5 p-4 rounded-xl bg-muted/40 border border-border">
                 <div className="flex items-baseline gap-3">
                   <span className="text-3xl font-extrabold text-primary">
-                    {course.currency}{" "}
-                    {Number(course.totalFee).toLocaleString()}.00
+                    {course.currency} {Number(course.totalFee).toLocaleString()}
+                    .00
                   </span>
 
                   {course.discount > 0 && (
                     <>
                       <span className="text-sm text-muted-foreground line-through">
-                        {course.currency}{" "}
-                        {course.price?.toLocaleString()}
+                        {course.currency} {course.price?.toLocaleString()}
                       </span>
 
                       <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium">
@@ -216,15 +211,16 @@ export default function CourseDetailPage() {
                     {course.minimumPayment}
                   </p>
                 )}
-
-                <button
-                  className={`${styles.btn} ${styles.btnPrimary} w-full mt-4 py-3`}
-                  onClick={() =>
-                    console.log("[CourseDetail] Enroll clicked:", course._id)
-                  }
-                >
-                  Enroll Now
-                </button>
+                <Link href={`/dashboard/user-dashboard/components/modules`}>
+                  <button
+                    className={`${styles.btn} ${styles.btnPrimary} w-full mt-4 py-3`}
+                    onClick={() =>
+                      console.log("[CourseDetail] Enroll clicked:", course._id)
+                    }
+                  >
+                    Enroll Now
+                  </button>
+                </Link>
               </div>
             )}
 
@@ -234,9 +230,7 @@ export default function CourseDetailPage() {
                 <h2 className={`${styles.cardTitle} mb-2`}>
                   About this Course
                 </h2>
-                <p className={styles.textSecondary}>
-                  {course.description}
-                </p>
+                <p className={styles.textSecondary}>{course.description}</p>
               </div>
             )}
 
@@ -257,9 +251,7 @@ export default function CourseDetailPage() {
             {/* Requirements */}
             {course.requirements?.length > 0 && (
               <div className="mb-5">
-                <h2 className={`${styles.cardTitle} mb-2`}>
-                  Requirements
-                </h2>
+                <h2 className={`${styles.cardTitle} mb-2`}>Requirements</h2>
                 <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
                   {course.requirements.map((req, i) => (
                     <li key={i}>{req}</li>

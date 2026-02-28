@@ -211,7 +211,7 @@ export default function CourseDetailPage() {
                     {course.minimumPayment}
                   </p>
                 )}
-                <Link href={`/dashboard/user-dashboard/components/modules`}>
+                <Link href={`/dashboard/user-dashboard/components/modules?courseId=${course._id}`}>
                   <button
                     className={`${styles.btn} ${styles.btnPrimary} w-full mt-4 py-3`}
                     onClick={() =>

@@ -9,7 +9,7 @@ export default function CallToAction() {
     return (
         <section id="contact" className="py-20 md:py-32 bg-[#020617]">
             <div className="container mx-auto px-4 md:px-6">
-                <div className="max-w-5xl mx-auto text-center space-y-8 bg-gradient-to-br from-blue-900/20 to-[#0f172a] p-8 md:p-20 rounded-[2rem] shadow-2xl border border-white/5 relative overflow-hidden group">
+                <div className="max-w-5xl mx-auto text-center space-y-8 bg-linear-to-br from-blue-900/20 to-[#0f172a] p-8 md:p-20 rounded-4xl shadow-2xl border border-white/5 relative overflow-hidden group">
                     {/* Decorative elements */}
                     <div className="absolute top-0 right-0 -mr-32 -mt-32 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] group-hover:bg-blue-500/20 transition-colors duration-700" />
                     <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] group-hover:bg-cyan-500/20 transition-colors duration-700" />
@@ -23,10 +23,10 @@ export default function CallToAction() {
                     >
                         <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-white">
                             Start Your Learning <br />
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">Journey Today</span>
+                            <span className="bg-clip-text text-transparent bg-linear-to-r from-blue-400 to-cyan-400">Journey Today</span>
                         </h2>
                         <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-                            Join Hamsa Institute of Occoured Science and take the first step toward a brighter future. Admissions are now open for upcoming batches.
+                            Join Hamsa Institute of Occult Science and take the first step toward a brighter future. Admissions are now open for upcoming batches.
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-6">

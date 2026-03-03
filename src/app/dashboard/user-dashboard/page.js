@@ -10,6 +10,7 @@ import { GET_ALL_COURSES } from "../api";
 import { requestWithAuth } from "../utils/apiClient";
 import Footer from "@/components/landing/Footer";
 import { useRouter } from "next/navigation";
+import MyLoader from "@/components/landing/MyLoder";
 
 export default function UserDashboard() {
   const [profile, setProfile] = useState(null);
@@ -112,9 +113,7 @@ export default function UserDashboard() {
   if (loading) {
     return (
       <DashboardLayout role="user">
-        <div className={styles.flexCenter} style={{ minHeight: "400px" }}>
-          <div className={styles.loading}></div>
-        </div>
+        <MyLoader />
       </DashboardLayout>
     );
   }

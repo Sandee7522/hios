@@ -12,6 +12,7 @@ import {
   GET_ALL_MODULES_BYID,
   GET_LESSON,
 } from "@/app/dashboard/api";
+import MyLoader from "@/components/landing/MyLoder";
 
 export default function ModulesPage() {
   const searchParams = useSearchParams();
@@ -161,11 +162,8 @@ export default function ModulesPage() {
      ============================================================ */
   if (modulesLoading) {
     return (
-      <div
-        className={styles.flexCenter}
-        style={{ minHeight: "100vh", background: "var(--dashboard-bg)" }}
-      >
-        <div className={styles.loading} />
+      <div className={styles.flexCenter}>
+        <MyLoader />{" "}
       </div>
     );
   }

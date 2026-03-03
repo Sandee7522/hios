@@ -7,6 +7,7 @@ import styles from "../../../dashboard.module.css";
 import DashboardLayout from "@/app/dashboard/component/DashboardLayout";
 import { requestWithAuth } from "@/app/dashboard/utils/apiClient";
 import Link from "next/link";
+import MyLoader from "@/components/landing/MyLoder";
 
 /* ================= HELPERS ================= */
 
@@ -28,6 +29,12 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentPercent, setPaymentPercent] = useState(100);
+
+  const getPayAmount = () => {
+    const total = Number(course.totalFee || 0);
+    return ((total * paymentPercent) / 100).toFixed(2);
+  };
 
   useEffect(() => {
     if (!slug) {
@@ -94,9 +101,7 @@ export default function CourseDetailPage() {
   if (loading) {
     return (
       <DashboardLayout role="user">
-        <div className={styles.flexCenter} style={{ minHeight: "400px" }}>
-          <div className={styles.loading}></div>
-        </div>
+        <MyLoader />
       </DashboardLayout>
     );
   }
@@ -127,154 +132,159 @@ export default function CourseDetailPage() {
 
   return (
     <DashboardLayout role="user">
-      <div className={styles.fadeIn}>
-        {/* Thumbnail */}
-        {course.thumbnail && (
-          <div className="w-full overflow-hidden rounded-xl mb-6 max-h-80 bg-gray-100">
-            <img
-              src={course.thumbnail}
-              alt={course.title || "course-thumbnail"}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                console.warn("[CourseDetail] Thumbnail failed to load");
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          </div>
-        )}
+      <div className={styles.card}>
+        {/* ===== TOP GRID ===== */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* ================= LEFT DETAILS ================= */}
+          <div className="lg:col-span-2">
+            <div>
+              <div className={styles.cardBody}>
+                {/* Title */}
+                <h1 className={`${styles.headerTitle} mb-2`}>
+                  {course.title || "Untitled Course"}
+                </h1>
 
-        <div className={styles.card}>
-          <div className={styles.cardBody}>
-            {/* Title */}
-            <h1 className={`${styles.headerTitle} mb-2`}>
-              {course.title || "Untitled Course"}
-            </h1>
-
-            {/* Meta */}
-            <div className="text-sm space-y-1 mb-4">
-              {course.instructorId?.name && (
-                <p>
-                  Instructor:{" "}
-                  <span className={styles.textSecondary}>
-                    {course.instructorId.name}
-                  </span>
-                </p>
-              )}
-
-              {course.level && (
-                <p>
-                  Level: <span className="capitalize">{course.level}</span>
-                </p>
-              )}
-
-              {course.courseLanguage && (
-                <p>
-                  Language:{" "}
-                  <span className="capitalize">{course.courseLanguage}</span>
-                </p>
-              )}
-
-              {formatDuration(course.duration) && (
-                <p>Duration: {formatDuration(course.duration)}</p>
-              )}
-
-              {course.categoryId?.name && (
-                <p>Category: {course.categoryId.name}</p>
-              )}
-            </div>
-
-            {/* Price */}
-            {course.totalFee !== undefined && (
-              <div className="mb-5 p-4 rounded-xl bg-muted/40 border border-border">
-                <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-extrabold text-primary">
-                    {course.currency} {Number(course.totalFee).toLocaleString()}
-                    .00
-                  </span>
-
-                  {course.discount > 0 && (
-                    <>
-                      <span className="text-sm text-muted-foreground line-through">
-                        {course.currency} {course.price?.toLocaleString()}
+                {/* Meta */}
+                <div className="text-sm space-y-1 mb-6">
+                  {course.instructorId?.name && (
+                    <p>
+                      Instructor:{" "}
+                      <span className={styles.textSecondary}>
+                        {course.instructorId.name}
                       </span>
+                    </p>
+                  )}
 
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium">
-                        -{course.discount}% OFF
+                  {course.level && (
+                    <p>
+                      Level: <span className="capitalize">{course.level}</span>
+                    </p>
+                  )}
+
+                  {course.courseLanguage && (
+                    <p>
+                      Language:{" "}
+                      <span className="capitalize">
+                        {course.courseLanguage}
                       </span>
-                    </>
+                    </p>
+                  )}
+
+                  {formatDuration(course.duration) && (
+                    <p>Duration: {formatDuration(course.duration)}</p>
+                  )}
+
+                  {course.categoryId?.name && (
+                    <p>Category: {course.categoryId.name}</p>
                   )}
                 </div>
 
-                {course.partialPaymentEnabled && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Partial payment available. Min: {course.currency}{" "}
-                    {course.minimumPayment}
-                  </p>
+                {/* Description */}
+                {course.description && (
+                  <div className="mb-6">
+                    <h2 className={`${styles.cardTitle} mb-2`}>
+                      About this Course
+                    </h2>
+                    <p className={styles.textSecondary}>{course.description}</p>
+                  </div>
                 )}
-                <Link href={`/dashboard/user-dashboard/components/modules?courseId=${course._id}`}>
-                  <button
-                    className={`${styles.btn} ${styles.btnPrimary} w-full mt-4 py-3`}
-                    onClick={() =>
-                      console.log("[CourseDetail] Enroll clicked:", course._id)
-                    }
-                  >
-                    Enroll Now
-                  </button>
-                </Link>
-              </div>
-            )}
 
-            {/* Description */}
-            {course.description && (
-              <div className="mb-5">
-                <h2 className={`${styles.cardTitle} mb-2`}>
-                  About this Course
-                </h2>
-                <p className={styles.textSecondary}>{course.description}</p>
-              </div>
-            )}
+                {/* Learn */}
+                {course.whatYouWillLearn?.length > 0 && (
+                  <div className="mb-6">
+                    <h2 className={`${styles.cardTitle} mb-2`}>
+                      What You'll Learn
+                    </h2>
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                      {course.whatYouWillLearn.map((item, i) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-            {/* What You'll Learn */}
-            {course.whatYouWillLearn?.length > 0 && (
-              <div className="mb-5">
-                <h2 className={`${styles.cardTitle} mb-2`}>
-                  What You'll Learn
-                </h2>
-                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                  {course.whatYouWillLearn.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
+                {/* Requirements */}
+                {course.requirements?.length > 0 && (
+                  <div className="mb-6">
+                    <h2 className={`${styles.cardTitle} mb-2`}>Requirements</h2>
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                      {course.requirements.map((req, i) => (
+                        <li key={i}>{req}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Requirements */}
-            {course.requirements?.length > 0 && (
-              <div className="mb-5">
-                <h2 className={`${styles.cardTitle} mb-2`}>Requirements</h2>
-                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                  {course.requirements.map((req, i) => (
-                    <li key={i}>{req}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          {/* ================= RIGHT IMAGE ================= */}
+          <div className="lg:col-span-1">
+            {course.thumbnail && (
+              <div className="sticky top-24">
+                <div className="overflow-hidden rounded-2xl bg-gray-100 group cursor-pointer">
+                  {/* 🔥 Hover Effect */}
+                  <img
+                    src={course.thumbnail}
+                    alt={course.title}
+                    className="w-full  h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
 
-            {/* Tags */}
-            {course.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {course.tags.map((tag, i) => (
-                  <span
-                    key={i}
-                    className="text-xs px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                  {/* overlay */}
+                  <div className="p-4">
+                    <p className="text-sm text-muted-foreground">
+                      Preview Course
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* ================= PAYMENT SECTION ================= */}
+        {course.totalFee !== undefined && (
+          <div className="mt-10">
+            <div className="p-6 rounded-2xl border border-border bg-muted/40">
+              {/* Price */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <h3 className="text-xl font-bold">Choose Payment</h3>
+
+                <div className="text-3xl font-extrabold text-primary">
+                  {course.currency} {getPayAmount()}
+                </div>
+              </div>
+
+              {/* 🔥 Payment Options */}
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                {[25, 50, 100].map((percent) => (
+                  <button
+                    key={percent}
+                    onClick={() => setPaymentPercent(percent)}
+                    className={`py-3 rounded-xl border font-semibold transition ${
+                      paymentPercent === percent
+                        ? "bg-primary text-white border-primary"
+                        : " hover:bg-muted border-border"
+                    }`}
+                  >
+                    Pay {percent}%
+                  </button>
+                ))}
+              </div>
+
+              {/* Enroll */}
+              <Link
+                href={`/dashboard/user-dashboard/components/modules?courseId=${course._id}`}
+              >
+                <button
+                  className={`${styles.btn} ${styles.btnPrimary} w-full py-3`}
+                >
+                  Continue to Payment
+                </button>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

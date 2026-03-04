@@ -1,47 +1,30 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import styles from "../dashboard.module.css";
 import { logout, getUserProfile } from "../utils/auth";
 
 export default function DashboardLayout({ children, role }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const dropdownRef = useRef(null);
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // =============================
-  // 🔍 Debug helper (dev only)
-  // =============================
-  const debug = (...args) => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("[DashboardLayout]", ...args);
-    }
-  };
-
-  // =============================
-  // ✅ Load profile safely
+  // Load Profile
   // =============================
   useEffect(() => {
     try {
-      debug("Fetching user profile...");
-
       const profile = getUserProfile();
-
-      if (!profile) {
-        debug("No profile found");
-        setUserProfile(null);
-        return;
-      }
-
-      setUserProfile(profile);
-      debug("Profile loaded", profile);
+      setUserProfile(profile || null);
     } catch (error) {
-      console.error("❌ Failed to load user profile:", error);
+      console.error("Profile load failed:", error);
       setUserProfile(null);
     } finally {
       setLoadingProfile(false);
@@ -49,136 +32,44 @@ export default function DashboardLayout({ children, role }) {
   }, []);
 
   // =============================
-  // ✅ Navigation (memoized)
+  // Close dropdown on outside click
   // =============================
-  const navigationItems = useMemo(() => {
-    const commonItems = [
-      {
-        name: "Dashboard",
-        href: `/dashboard/${role}-dashboard`,
-      },
-      {
-        name: "Profile",
-        href: `/dashboard/${role}-dashboard/profile`,
-      },
-    ];
-
-    switch (role) {
-      case "admin":
-        return [
-          ...commonItems,
-          {
-            name: "Users",
-            href: "/dashboard/admin-dashboard/users",
-
-          },
-          {
-            name: "Roles",
-            href: "/dashboard/admin-dashboard/roles",
-  
-          },
-          {
-            name: "Settings",
-            href: "/dashboard/admin-dashboard/settings",
-          },
-        ];
-
-      case "instructor":
-        return [
-          ...commonItems,
-          {
-            name: "Courses",
-            href: "/dashboard/instructor-dashboard/courses",
-            icon: "📚",
-          },
-          {
-            name: "Students",
-            href: "/dashboard/instructor-dashboard/students",
-            icon: "🎓",
-          },
-          {
-            name: "Assignments",
-            href: "/dashboard/instructor-dashboard/assignments",
-            icon: "📝",
-          },
-        ];
-
-      default:
-        return [
-          ...commonItems,
-          {
-            name: "My Courses",
-            href: "/dashboard/user-dashboard/courses",
-
-          },
-          {
-            name: "Assignments",
-            href: "/dashboard/user-dashboard/assignments",
-
-          },
-          {
-            name: "Progress",
-            href: "/dashboard/user-dashboard/progress",
-
-          },
-        ];
-    }
-  }, [role]);
-
-  // =============================
-  // 🚪 Logout handler (safe)
-  // =============================
-  const handleLogout = useCallback(() => {
-    try {
-      const confirmed = window.confirm("Are you sure you want to logout?");
-      if (!confirmed) return;
-
-      debug("User logging out...");
-      logout();
-    } catch (error) {
-      console.error("❌ Logout failed:", error);
-      alert("Logout failed. Please try again.");
-    }
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // =============================
-  // 🎯 Helpers
+  // Navigation
   // =============================
-  const getRoleTitle = () => {
-    switch (role) {
-      case "admin":
-        return "Admin Panel";
-      case "instructor":
-        return "Instructor Hub";
-      default:
-        return "Student Portal";
-    }
-  };
-
-  const getRoleIcon = () => {
-    switch (role) {
-      case "admin":
-        return "⚡";
-      case "instructor":
-        return "📖";
-      default:
-        return "🎓";
-    }
-  };
+  const navigationItems = useMemo(() => {
+    return [
+      { name: "Dashboard", href: "/dashboard" },
+      { name: "Profile", href: "/dashboard/profile" },
+    ];
+  }, []);
 
   // =============================
-  // 🛑 Early error guard
+  // Logout
   // =============================
-  if (!role) {
-    console.error("❌ DashboardLayout: role prop is required");
-    return null;
-  }
+  const handleLogout = useCallback(() => {
+    const confirmed = window.confirm("Are you sure you want to logout?");
+    if (!confirmed) return;
+    logout();
+  }, []);
+
+  if (!role) return null;
 
   return (
     <div className={styles.dashboardContainer}>
-      {/* ================= Top Navbar ================= */}
+      {/* ================= NAVBAR ================= */}
       <motion.nav
-        initial={{ y: -100 }}
+        initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100 }}
         style={{
@@ -187,12 +78,9 @@ export default function DashboardLayout({ children, role }) {
           zIndex: 1000,
           backgroundColor: "var(--dashboard-surface)",
           borderBottom: "1px solid var(--dashboard-border)",
-          boxShadow: "var(--dashboard-shadow-md)",
         }}
       >
-        <div
-          style={{ maxWidth: "1600px", margin: "0 auto", padding: "0 1.5rem" }}
-        >
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 1.5rem" }}>
           <div
             style={{
               display: "flex",
@@ -201,143 +89,152 @@ export default function DashboardLayout({ children, role }) {
               height: "70px",
             }}
           >
-            {/* ===== Brand ===== */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
-            >
-              <div
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "8px",
-                  background:
-                    "linear-gradient(135deg, var(--dashboard-primary), var(--dashboard-info))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.5rem",
-                }}
-              >
-                {getRoleIcon()}
-              </div>
+            {/* ===== Left Brand ===== */}
+            <h2 style={{ fontWeight: "700" }}>
+              {role === "admin"
+                ? "Admin Panel"
+                : role === "instructor"
+                ? "Instructor Hub"
+                : "Student Portal"}
+            </h2>
 
-              <div>
-                <h2
-                  style={{ margin: 0, fontSize: "1.25rem", fontWeight: "700" }}
-                >
-                  {getRoleTitle()}
-                </h2>
-
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "0.75rem",
-                    color: "var(--dashboard-text-muted)",
-                  }}
-                >
-                  {loadingProfile ? "Loading..." : userProfile?.name || "User"}
-                </p>
-              </div>
-            </motion.div>
-
-            {/* ===== Desktop Nav ===== */}
-            <div
-              className={styles.desktopNav}
-              style={{ display: "flex", gap: "0.5rem" }}
-            >
-              {navigationItems.map((item, index) => {
+            {/* ===== Navigation ===== */}
+            <div style={{ display: "flex", gap: "1rem" }}>
+              {navigationItems.map((item) => {
                 const isActive = pathname === item.href;
-
                 return (
-                  <motion.div
+                  <Link
                     key={item.name}
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.08 }}
+                    href={item.href}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      borderRadius: "6px",
+                      backgroundColor: isActive ? "#1e293b" : "transparent",
+                      color: isActive ? "#3b82f6" : "#94a3b8",
+                      textDecoration: "none",
+                    }}
                   >
-                    <Link
-                      href={item.href}
-                      aria-current={isActive ? "page" : undefined}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        padding: "0.625rem 1rem",
-                        borderRadius: "var(--dashboard-radius-md)",
-                        color: isActive
-                          ? "var(--dashboard-primary)"
-                          : "var(--dashboard-text-secondary)",
-                        backgroundColor: isActive
-                          ? "var(--dashboard-primary-light)"
-                          : "transparent",
-                        textDecoration: "none",
-                        fontWeight: isActive ? "600" : "500",
-                        fontSize: "0.875rem",
-                        transition: "var(--dashboard-transition)",
-                      }}
-                    >
-                      <span>{item.icon}</span>
-                      <span>{item.name}</span>
-                    </Link>
-                  </motion.div>
+                    {item.name}
+                  </Link>
                 );
               })}
             </div>
 
-            {/* ===== User Area ===== */}
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <span
-                style={{
-                  fontSize: "0.875rem",
-                  color: "var(--dashboard-text-secondary)",
-                }}
-              >
-                {userProfile?.email || ""}
-              </span>
-
+            {/* ===== User Section ===== */}
+            <div style={{ position: "relative" }} ref={dropdownRef}>
               <motion.div
                 whileHover={{ scale: 1.1 }}
+                onClick={() => setProfileOpen((prev) => !prev)}
                 style={{
                   width: "40px",
                   height: "40px",
                   borderRadius: "50%",
-                  background:
-                    "linear-gradient(135deg, var(--dashboard-primary), var(--dashboard-success))",
+                  background: "linear-gradient(135deg, #3b82f6, #10b981)",
                   color: "white",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontWeight: "bold",
+                  cursor: "pointer",
                 }}
               >
                 {userProfile?.name?.charAt(0)?.toUpperCase() || "U"}
               </motion.div>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLogout}
-                className={`${styles.btn} ${styles.btnDanger} ${styles.btnSmall}`}
-              >
-                🚪 Logout
-              </motion.button>
+              {/* ===== Dropdown ===== */}
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "55px",
+                      width: "260px",
+                      backgroundColor: "#0f172a",
+                      borderRadius: "12px",
+                      padding: "1rem",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+                      border: "1px solid #1e293b",
+                      zIndex: 999,
+                    }}
+                  >
+                    {/* User Info */}
+                    <div style={{ marginBottom: "1rem" }}>
+                      <p style={{ fontWeight: "600", margin: 0 }}>
+                        {userProfile?.name || "User"}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#94a3b8",
+                          margin: 0,
+                        }}
+                      >
+                        {userProfile?.email || ""}
+                      </p>
+                    </div>
+
+                    <hr style={{ borderColor: "#1e293b" }} />
+
+                    {/* Links */}
+                    <div style={{ marginTop: "0.8rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <button
+                        onClick={() => {
+                          router.push("/dashboard/myCourses");
+                          setProfileOpen(false);
+                        }}
+                        style={dropdownBtnStyle}
+                      >
+                        📚 My Courses
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          router.push("/dashboard/profile");
+                          setProfileOpen(false);
+                        }}
+                        style={dropdownBtnStyle}
+                      >
+                        ⚙ Profile
+                      </button>
+
+                      <button
+                        onClick={handleLogout}
+                        style={{ ...dropdownBtnStyle, color: "#ef4444" }}
+                      >
+                        🚪 Logout
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
       </motion.nav>
 
-      {/* ================= Main Content ================= */}
-      <main
-        style={{ maxWidth: "1600px", margin: "0 auto", padding: "2rem 1.5rem" }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          {children}
-        </motion.div>
+      {/* ================= MAIN ================= */}
+      <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem 1.5rem" }}>
+        {children}
       </main>
     </div>
   );
 }
+
+// =============================
+// Dropdown Button Style
+// =============================
+const dropdownBtnStyle = {
+  background: "transparent",
+  border: "none",
+  color: "#e2e8f0",
+  padding: "0.5rem",
+  borderRadius: "6px",
+  textAlign: "left",
+  cursor: "pointer",
+  transition: "0.2s",
+};

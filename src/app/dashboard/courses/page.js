@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import DashboardLayout from "../component/DashboardLayout";
 import styles from "../dashboard.module.css";
 import { getUserProfile, getUserRole } from "../utils/auth";
-import { GET_ALL_COURSES } from "../api";
+import { GET_ALL_COURSES } from "../utils/api";
 import { requestWithAuth } from "../utils/apiClient";
 import Footer from "@/components/landing/Footer";
 import { useRouter } from "next/navigation";
@@ -343,7 +343,7 @@ export default function UserDashboard() {
                       {/* Action Button */}
                       <button
   className={`${styles.btn} ${styles.btnSecondary} mt-[-4px w-full py-3 text-sm md:text-base`}
-  onClick={() => router.push(`/dashboard/user-dashboard/components/${course.slug}`)}
+  onClick={() => router.push(`/dashboard/component/${course.slug}`)}
 >
   Continue
 </button>

@@ -14,7 +14,7 @@ import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { GET_ALL_CATEGORY } from '@/app/dashboard/api'
+import { GET_ALL_CATEGORY } from '@/app/dashboard/utils/api'
 
 export default function Programs() {
   const router = useRouter()

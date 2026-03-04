@@ -36,7 +36,7 @@ export default function DashboardPage() {
                     break;
                 case 'user':
                     console.log('Redirecting to user dashboard');
-                    router.push('/dashboard/user-dashboard');
+                    router.push('/dashboard/courses');
                     break;
                 default:
                     // If role is not recognized, redirect to login

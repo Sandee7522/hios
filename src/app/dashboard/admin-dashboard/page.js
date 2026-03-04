@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '../component/DashboardLayout';
 import styles from '../dashboard.module.css';
 import { getUserProfile, getUserRole } from '../utils/auth';
-import { GET_ALL_USERS, GET_ALL_ROLES } from '../api';
+import { GET_ALL_USERS, GET_ALL_ROLES } from '../utils/api';
 import { requestWithAuth } from '../utils/apiClient';
 import Footer from '@/components/landing/Footer';
 

@@ -11,7 +11,7 @@ import {
   MODULE_BY_COURSEID,
   GET_ALL_MODULES_BYID,
   GET_LESSON,
-} from "@/app/dashboard/api";
+} from "@/app/dashboard/utils/api";
 import MyLoader from "@/components/landing/MyLoder";
 
 export default function ModulesPage() {

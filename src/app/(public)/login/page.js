@@ -2,78 +2,83 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import styles from '../dashboard/dashboard.module.css';
-import { setAuthData } from '../dashboard/utils/auth';
-import { REGISTER } from '../dashboard/api';
+import styles from '../../dashboard/dashboard.module.css';
+import { setAuthData } from '../../dashboard/utils/auth';
+import { LOGIN } from '../../dashboard/utils/api';
 
-export default function RegisterPage() {
+export default function LoginPage() {
     const router = useRouter();
-    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleRegister = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            const response = await fetch(REGISTER, {
+            // Call your login API
+            const response = await fetch(LOGIN, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ email, password }),
             });
 
             const data = await response.json();
 
-            // Log response for debugging
-            console.log('Register API Response:', data);
+            // Log the complete response to see the structure
+            console.log('Complete API Response:', data);
+            console.log('Response status:', response.status);
 
             if (!response.ok) {
-                // Handle API error messages
-                const errorMessage = data.message || data.error || 'Registration failed';
-                throw new Error(errorMessage);
+                throw new Error(data.message || 'Invalid credentials');
             }
 
-            // Extract token and user data
-            // Based on user provided structure:
-            // data.data (wrapper) -> data.data.data (payload with token)
-            // But sometimes APIs are flattened. Let's try to handle both or debug.
-            // User sample:
-            // "data": { "success": true, "data": { "user": ..., "accessToken": ... } }
-            // So: const payload = data.data?.data;
+            // Extract role and user data from response
+            // Your API structure: data.accessToken, data.user.role.user_type
+            let token = data.data?.accessToken;
+            let role = data.data?.user?.role?.user_type;
+            let user = {
+                id: data.data?.user?.id,
+                name: data.data?.user?.name,
+                email: data.data?.user?.email,
+                isEmailVerified: data.data?.user?.isEmailVerified
+            };
 
-            const payload = data.data?.data || data.data; // Fallback just in case
+            console.log('Extracted values:', { token, role, user });
 
-            if (!payload || !payload.accessToken) {
-                console.error('Unexpected response structure:', data);
-                throw new Error('Registration successful but failed to log in automatically. Please sign in.');
+            if (!token || !role) {
+                console.error('Missing data in response:', {
+                    hasToken: !!token,
+                    hasRole: !!role,
+                    fullResponse: data
+                });
+                throw new Error('Invalid response from server. Missing token or role.');
             }
 
-            const token = payload.accessToken;
-            // User role might be nested in user object
-            const user = payload.user;
-            const role = user?.role?.user_type || 'user'; // Default to user if not found
+            console.log('Login successful:', { role, user }); // Debug log
 
-            // Save auth data
+            // Set authentication data in cookies
             setAuthData(token, role, user);
 
-            // Redirect
+            // Small delay to ensure cookies are set
             setTimeout(() => {
+                // Redirect to dashboard (will auto-redirect to role-specific dashboard)
                 router.push('/dashboard');
             }, 100);
 
         } catch (err) {
-            console.error('Registration error:', err);
-            setError(err.message || 'An error Occult during registration');
+            console.error('Login error:', err);
+            setError(err.message || 'Login failed. Please try again.');
             setLoading(false);
         }
     };
+
+
 
     return (
         <div className={styles.dashboardContainer} style={{ minHeight: '100vh' }}>
@@ -81,10 +86,10 @@ export default function RegisterPage() {
                 <div className={styles.card} style={{ maxWidth: '450px', width: '100%' }}>
                     <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                         <h1 className={styles.headerTitle} style={{ marginBottom: '0.5rem' }}>
-                            Create Account 🚀
+                            Welcome Back! 👋
                         </h1>
                         <p className={styles.textSecondary}>
-                            Join us and start your journey today
+                            Sign in to access your dashboard
                         </p>
                     </div>
 
@@ -103,19 +108,7 @@ export default function RegisterPage() {
                         </div>
                     )}
 
-                    <form onSubmit={handleRegister}>
-                        <div className={styles.formGroup}>
-                            <label className={styles.formLabel}>Full Name</label>
-                            <input
-                                type="text"
-                                className={styles.formInput}
-                                placeholder="John Doe"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                            />
-                        </div>
-
+                    <form onSubmit={handleLogin}>
                         <div className={styles.formGroup}>
                             <label className={styles.formLabel}>Email Address</label>
                             <input
@@ -133,11 +126,10 @@ export default function RegisterPage() {
                             <input
                                 type="password"
                                 className={styles.formInput}
-                                placeholder="Create a strong password"
+                                placeholder="Enter your password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                minLength={6}
                             />
                         </div>
 
@@ -150,27 +142,29 @@ export default function RegisterPage() {
                             {loading ? (
                                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                                     <span className={styles.loading}></span>
-                                    Creating Account...
+                                    Signing in...
                                 </span>
                             ) : (
-                                'Sign Up'
+                                'Sign In'
                             )}
                         </button>
                     </form>
 
+
+
                     <div style={{ marginTop: '2rem', textAlign: 'center' }}>
                         <p className={styles.textMuted} style={{ fontSize: '0.875rem' }}>
-                            Already have an account?{' '}
-                            <Link
-                                href="/login"
+                            Don't have an account?{' '}
+                            <a
+                                href="/register"
                                 style={{
                                     color: 'var(--dashboard-primary)',
                                     textDecoration: 'none',
                                     fontWeight: '500',
                                 }}
                             >
-                                Sign in
-                            </Link>
+                                Sign up
+                            </a>
                         </p>
                     </div>
                 </div>

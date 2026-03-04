@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { GET_COURSE_BY_SLUG } from "../../../api";
-import styles from "../../../dashboard.module.css";
+import { GET_COURSE_BY_SLUG } from "../../utils/api";
+import styles from "../../dashboard.module.css";
 import DashboardLayout from "@/app/dashboard/component/DashboardLayout";
 import { requestWithAuth } from "@/app/dashboard/utils/apiClient";
 import Link from "next/link";
@@ -274,7 +274,7 @@ export default function CourseDetailPage() {
 
               {/* Enroll */}
               <Link
-                href={`/dashboard/user-dashboard/components/modules?courseId=${course._id}`}
+                href={`/dashboard/component/modules?courseId=${course._id}`}
               >
                 <button
                   className={`${styles.btn} ${styles.btnPrimary} w-full py-3`}

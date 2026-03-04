@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation"; // or react-router depending on your setup
-import { GET_COURSE_BY_SLUG } from "../api";
+import { GET_COURSE_BY_SLUG } from "../utils/api";
 
 export default function GetCourseBySlug() {
   const { slug } = useParams(); // ✅ get slug from URL

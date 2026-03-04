@@ -25,9 +25,9 @@ export const GET_POFILE_BY_ID = `${API_URL}/post/getProfileById`;
 export const GET_ALL_CATEGORY = `${API_URL}/category/getAllCategory`;
 export const GET_ALL_COURSES = `${API_URL}/courses/getAllCourse`;
 export const GET_COURSE_BY_SLUG = (slug) => `${API_URL}/courses/${slug}`;
-export const GET_ALL_MODULES_BYID = `${API_URL}/admin/module/getAllModules`;
-export const MODULE_BY_COURSEID = `${API_URL}/admin/module/getModuleById`;
-export const GET_LESSON = `${API_URL}/admin/lesson/getLesson`;
+export const GET_ALL_MODULES_BYID = `${API_URL}/module&Lessons/getModuleById`;
+export const MODULE_BY_COURSEID = `${API_URL}/module&Lessons/moduleByCourseId`;
+export const GET_LESSON = `${API_URL}/module&Lessons/getLesson`;
 
 // **********************************            *************************************
 //                                   ADMIN API'S

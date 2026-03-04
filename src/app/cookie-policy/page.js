@@ -4,7 +4,7 @@ import LegalSection from "@/components/legal/LegalSection";
 
 export const metadata = {
     title: 'Cookie Policy | Hamsa Institute',
-    description: 'Cookie Policy for Hamsa Institute of Occoured Science',
+    description: 'Cookie Policy for Hamsa Institute of Occult Science',
 }
 
 export default function CookiePolicy() {
@@ -16,7 +16,7 @@ export default function CookiePolicy() {
 
             <LegalSection>
                 <p>
-                    This Cookie Policy explains what cookies are and how Hamsa Institute of Occoured Science ("we," "us," or "our") uses them on our website. You should read this policy so you can understand what type of cookies we use, the information we collect using cookies, and how that information is used.
+                    This Cookie Policy explains what cookies are and how Hamsa Institute of Occult Science ("we," "us," or "our") uses them on our website. You should read this policy so you can understand what type of cookies we use, the information we collect using cookies, and how that information is used.
                 </p>
             </LegalSection>
 

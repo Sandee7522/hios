@@ -29,10 +29,10 @@ export default function About() {
                             <img
                                 src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop"
                                 alt="About Hamsa Institute"
-                                className="relative rounded-2xl shadow-2xl w-full h-[400px] object-cover border border-white/10"
+                                className="relative rounded-2xl shadow-2xl w-full h-100 object-cover border border-white/10"
                             />
                             <div className="absolute -bottom-6 -right-6 bg-[#0f172a] p-6 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
-                                <p className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">10+</p>
+                                <p className="text-4xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-400 to-cyan-400">10+</p>
                                 <p className="text-sm font-medium text-slate-400">Years Experience</p>
                             </div>
                         </motion.div>
@@ -49,14 +49,14 @@ export default function About() {
                                 About Hamsa Institute
                             </h2>
                             <p className="text-lg text-slate-400 mb-8 leading-relaxed font-light">
-                                Hamsa Institute of Occoured Science is a forward-thinking educational institution dedicated to academic excellence and professional development. We focus on outcome-oriented learning that equips students with practical skills, critical thinking abilities, and industry-relevant knowledge.
+                                Hamsa Institute of Occult Science is a forward-thinking educational institution dedicated to academic excellence and professional development. We focus on outcome-oriented learning that equips students with practical skills, critical thinking abilities, and industry-relevant knowledge.
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 {highlights.map((item, index) => (
                                     <div key={index} className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-blue-900/30 flex items-center justify-center border border-blue-500/20">
-                                            <CheckCircle2 className="text-blue-400 h-4 w-4 flex-shrink-0" />
+                                            <CheckCircle2 className="text-blue-400 h-4 w-4 shrink-0" />
                                         </div>
                                         <span className="text-slate-300 font-medium">{item}</span>
                                     </div>

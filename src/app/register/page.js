@@ -70,7 +70,7 @@ export default function RegisterPage() {
 
         } catch (err) {
             console.error('Registration error:', err);
-            setError(err.message || 'An error occurred during registration');
+            setError(err.message || 'An error Occult during registration');
             setLoading(false);
         }
     };

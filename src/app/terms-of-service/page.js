@@ -4,7 +4,7 @@ import LegalSection from "@/components/legal/LegalSection";
 
 export const metadata = {
     title: 'Terms of Service | Hamsa Institute',
-    description: 'Terms of Service for Hamsa Institute of Occoured Science',
+    description: 'Terms of Service for Hamsa Institute of Occult Science',
 }
 
 export default function TermsOfService() {
@@ -16,12 +16,12 @@ export default function TermsOfService() {
 
             <LegalSection>
                 <p>
-                    These Terms of Service ("Terms") govern your access to and use of the Hamsa Institute of Occoured Science website and services. By accessing or using our Service, you agree to be bound by these Terms. If you disagree with any part of the terms, then you may not access the Service.
+                    These Terms of Service ("Terms") govern your access to and use of the Hamsa Institute of Occult Science website and services. By accessing or using our Service, you agree to be bound by these Terms. If you disagree with any part of the terms, then you may not access the Service.
                 </p>
             </LegalSection>
 
             <LegalSection title="1. Educational Services">
-                <p>Hamsa Institute provides online and offline educational courses in Occoured Science. We reserve the right to modify, suspend, or discontinue any aspect of our services at any time without notice.</p>
+                <p>Hamsa Institute provides online and offline educational courses in Occult Science. We reserve the right to modify, suspend, or discontinue any aspect of our services at any time without notice.</p>
                 <p>Course content, including videos, documents, and quizzes, is for personal educational use only. Unauthorized distribution or commercial use of our materials is strictly prohibited.</p>
             </LegalSection>
 
@@ -37,7 +37,7 @@ export default function TermsOfService() {
             </LegalSection>
 
             <LegalSection title="4. Intellectual Property">
-                <p>The Service and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of Hamsa Institute of Occoured Science and its licensors. The Service is protected by copyright, trademark, and other laws of both India and foreign countries.</p>
+                <p>The Service and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of Hamsa Institute of Occult Science and its licensors. The Service is protected by copyright, trademark, and other laws of both India and foreign countries.</p>
             </LegalSection>
 
             <LegalSection title="5. User Conduct">

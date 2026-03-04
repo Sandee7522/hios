@@ -294,8 +294,8 @@ const PaymentSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
     courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses', required: true },
-    enrollmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Enrollments' },
-    razorpayOrderId: { type: String, required: true },
+    enrollmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Enrollments', required: true, },
+    razorpayOrderId: { type: String, required: true, unique: true },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
     amount: { type: Number, required: true },
@@ -309,11 +309,9 @@ const PaymentSchema = new mongoose.Schema(
     refundReason: { type: String },
     refundedAt: { type: Date },
     metadata: { type: mongoose.Schema.Types.Mixed },
-    invoiceUrl: { type: String },
-    created_at: { type: Date, default: Date.now },
-    updated_at: { type: Date, default: Date.now }
+    invoiceUrl: { type: String }, // createPdf
   },
-  { collection: 'payments' }
+  { collection: 'payments', timestamps: true }
 );
 
 PaymentSchema.pre('save', function () {

@@ -4,7 +4,7 @@ import LegalSection from "@/components/legal/LegalSection";
 
 export const metadata = {
     title: 'Privacy Policy | Hamsa Institute',
-    description: 'Privacy Policy for Hamsa Institute of Occoured Science',
+    description: 'Privacy Policy for Hamsa Institute of Occult Science',
 }
 
 export default function PrivacyPolicy() {
@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
 
             <LegalSection>
                 <p>
-                    At Hamsa Institute of Occoured Science ("we," "our," or "us"), we are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our educational platform.
+                    At Hamsa Institute of Occult Science ("we," "our," or "us"), we are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our educational platform.
                 </p>
                 <p>
                     Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
@@ -67,7 +67,7 @@ export default function PrivacyPolicy() {
             <LegalSection title="6. Contact Us">
                 <p>If you have questions or comments about this Privacy Policy, please contact us at:</p>
                 <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                    <p className="font-semibold text-white">Hamsa Institute of Occoured Science</p>
+                    <p className="font-semibold text-white">Hamsa Institute of Occult Science</p>
                     <p>123 Education Lane, Knowledge City</p>
                     <p>Bangalore - 560001</p>
                     <p>Email: <a href="mailto:privacy@hamsainstitute.com" className="text-blue-400 hover:underline">privacy@hamsainstitute.com</a></p>

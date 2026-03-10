@@ -65,7 +65,21 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom animations */
+  --animate-shimmer: shimmer 1.1s ease-in-out infinite;
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 
 body {
   background: radial-gradient(circle at top center, #1e293b 0%, #020617 100%);
@@ -90,4 +104,358 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
+}
+
+/* ============================================================
+   ADMIN LAYOUT – sidebar + content wrapper
+   ============================================================ */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Content always fills full width – sidebar is always off-canvas */
+.admin-layout__content {
+  flex: 1;
+  margin-left: 0;
+  padding: 4.5rem 1.5rem 2rem;
+  min-width: 0;
+}
+
+/* ============================================================
+   ADMIN SIDEBAR
+   ============================================================ */
+
+/* Sidebar width token */
+:root {
+  --admin-sidebar-width: 272px;
+  --admin-sidebar-bg: #0a1628;
+  --admin-sidebar-border: #1e293b;
+  --admin-sidebar-active-bg: rgba(59, 130, 246, 0.15);
+  --admin-sidebar-active-color: #60a5fa;
+  --admin-sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+  --admin-sidebar-text: #cbd5e1;
+  --admin-sidebar-muted: #64748b;
+}
+
+.admin-sidebar {
+  position: fixed;
+  top: 4rem;
+  left: 0;
+  /* height: 100%; */
+  /* min-height: 100vh; */
+  width: var(--admin-sidebar-width);
+  background: var(--admin-sidebar-bg);
+  border-right: 1px solid var(--admin-sidebar-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 900;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
+}
+
+/* ── Header ── */
+.admin-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid var(--admin-sidebar-border);
+  flex-shrink: 0;
+}
+
+.admin-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: 0.01em;
+}
+
+/* Close button – always visible inside sidebar header */
+.admin-sidebar__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--admin-sidebar-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.admin-sidebar__close:hover {
+  background: var(--admin-sidebar-hover-bg);
+  color: var(--foreground);
+}
+
+/* ── Nav list ── */
+.admin-sidebar__nav {
+  list-style: none;
+  padding: 0.75rem 0.75rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Shared item inner layout ── */
+.admin-sidebar__item-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.admin-sidebar__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+  color: var(--admin-sidebar-muted);
+  transition: color 0.2s;
+}
+
+.admin-sidebar__label {
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--admin-sidebar-text);
+  transition: color 0.2s;
+}
+
+/* ── Link item ── */
+.admin-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.admin-sidebar__link:hover .admin-sidebar__icon,
+.admin-sidebar__link:hover .admin-sidebar__label {
+  color: var(--foreground);
+}
+
+.admin-sidebar__link:hover {
+  background: var(--admin-sidebar-hover-bg);
+}
+
+.admin-sidebar__link--active {
+  background: var(--admin-sidebar-active-bg) !important;
+}
+
+.admin-sidebar__link--active .admin-sidebar__icon,
+.admin-sidebar__link--active .admin-sidebar__label {
+  color: var(--admin-sidebar-active-color) !important;
+}
+
+/* ── Group button ── */
+.admin-sidebar__group-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-sidebar__group-btn:hover {
+  background: var(--admin-sidebar-hover-bg);
+}
+
+.admin-sidebar__group-btn:hover .admin-sidebar__icon,
+.admin-sidebar__group-btn:hover .admin-sidebar__label {
+  color: var(--foreground);
+}
+
+.admin-sidebar__chevron {
+  color: var(--admin-sidebar-muted);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+/* ── Sub-nav ── */
+.admin-sidebar__sub-nav {
+  list-style: none;
+  margin: 2px 0 2px 1.5rem;
+  padding: 0;
+  border-left: 1px solid var(--admin-sidebar-border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-sidebar__sub-link {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.admin-sidebar__sub-link:hover {
+  background: var(--admin-sidebar-hover-bg);
+}
+
+.admin-sidebar__sub-link:hover .admin-sidebar__icon,
+.admin-sidebar__sub-link:hover .admin-sidebar__label {
+  color: var(--foreground);
+}
+
+.admin-sidebar__sub-link--active {
+  background: var(--admin-sidebar-active-bg) !important;
+}
+
+.admin-sidebar__sub-link--active .admin-sidebar__icon,
+.admin-sidebar__sub-link--active .admin-sidebar__label {
+  color: var(--admin-sidebar-active-color) !important;
+}
+
+/* ── Backdrop – always available ── */
+.admin-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  /* backdrop-filter: blur(2px); */
+  z-index: 899;
+}
+
+/* ── Hamburger – always visible on all screen sizes ── */
+.admin-sidebar-hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 4.6rem;
+  left: 1rem;
+  z-index: 1000;
+  background: var(--admin-sidebar-bg);
+  border: 1px solid var(--admin-sidebar-border);
+  color: var(--foreground);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.admin-sidebar-hamburger:hover {
+  background: var(--admin-sidebar-hover-bg);
+  border-color: var(--primary);
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* ── Tablet (≤768px) ── */
+@media (max-width: 768px) {
+  .admin-layout__content {
+    padding: 4rem 0.875rem 1rem;
+  }
+
+  .admin-sidebar {
+    width: 280px;
+  }
+}
+
+/* ── Large phone (≤640px) ── */
+@media (max-width: 640px) {
+  .admin-layout__content {
+    padding: 3.75rem 0.75rem 1rem;
+  }
+
+  .admin-sidebar {
+    width: 75vw;
+  }
+}
+
+/* ── Phone (≤480px) ── */
+@media (max-width: 480px) {
+  .admin-layout__content {
+    padding: 3.5rem 0.625rem 0.75rem;
+  }
+
+  .admin-sidebar {
+    width: 85vw;
+  }
+
+  .admin-sidebar-hamburger {
+    top: 4.5rem;
+    left: 0.75rem;
+    padding: 0.4rem 0.5rem;
+  }
+}
+
+/* ── Tiny phone (≤360px) ── */
+@media (max-width: 360px) {
+  .admin-sidebar {
+    width: 92vw;
+  }
+
+  .admin-layout__content {
+    padding: 3.25rem 0.5rem 0.625rem;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE TABLE  (admin users table)
+   ============================================================ */
+
+/* Horizontal scroll wrapper – table stays as-is, just scrolls on mobile */
+.admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+
+/* Ensure the table never collapses below its natural width */
+.admin-table-wrap table {
+  min-width: 620px;
+}
+
+/* ============================================================
+   TABLE INLINE LOADING BAR
+   ============================================================ */
+.admin-table-loading-bar-wrap {
+  height: 3px;
+  background: transparent;
+  overflow: hidden;
+}
+
+.admin-table-loading-bar {
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      var(--primary) 40%,
+      #60a5fa 60%,
+      transparent 100%);
+  background-size: 200% 100%;
+  animation: table-bar-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes table-bar-slide {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }

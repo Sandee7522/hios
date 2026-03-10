@@ -17,6 +17,7 @@ export const metadata = {
 };
 
 import Providers from "./providers";
+import Footer from "@/components/landing/Footer";
 
 export default function RootLayout({ children }) {
   return (
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>{children}</Providers>
+        <Footer />
       </body>
     </html>
   );

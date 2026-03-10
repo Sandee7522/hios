@@ -18,7 +18,6 @@ export default function LegalLayout({ children }) {
                     </div>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

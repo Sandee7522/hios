@@ -37,6 +37,13 @@ export const GET_ALL_USERS = `${API_URL}/auth/getAllUsers`;
 export const CREATE_ROLE = `${API_URL}/roleAssign/roles`;
 export const GET_ALL_ROLES = `${API_URL}/roleAssign/roles`;
 export const ASSIGN_ROLE = `${API_URL}/auth/assignRole`;
+export const GET_ALL_ROLE = `${API_URL}/auth/getAllRoles`;
+
+// not integrated thes API
+export const GET_ALL_CATEGORY_ADMIN = `${API_URL}/admin/category/getAllCategory`;
+export const CREATE_CATEGORY_ADMIN = `${API_URL}/admin/category/createCategory`;
+export const UPDATE_CATEGORY_ADMIN = `${API_URL}/admin/category/updateCategory`;
+export const DELETE_CATEGORY_ADMIN = `${API_URL}/admin/category/deleteCategory`;
 
 // not integrated thes API
 export const GET_ALL_COURSES_ADMIN = `${API_URL}/admin/course/getAllCourse`;

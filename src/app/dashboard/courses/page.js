@@ -342,11 +342,11 @@ export default function UserDashboard() {
 
                       {/* Action Button */}
                       <button
-  className={`${styles.btn} ${styles.btnSecondary} mt-[-4px w-full py-3 text-sm md:text-base`}
-  onClick={() => router.push(`/dashboard/component/${course.slug}`)}
->
-  Continue
-</button>
+                        className={`${styles.btn} ${styles.btnSecondary} mt-[-4px w-full py-3 text-sm md:text-base`}
+                        onClick={() => router.push(`/dashboard/component/${course.slug}`)}
+                      >
+                        Continue
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -355,7 +355,6 @@ export default function UserDashboard() {
           </div>
         </div>
       </DashboardLayout>
-      <Footer />
     </>
   );
 }

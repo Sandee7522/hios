@@ -232,6 +232,22 @@ export default class AuthService {
     }
   }
 
+  async getAllRoles() {
+    try {
+      const roles = await UserRoles.find().sort({ created_at: -1 });
+
+      return {
+        status: 200,
+        message: "Roles fetched successfully",
+        data: roles,
+      };
+
+    } catch (error) {
+      console.log("Get AllRole Error", error);
+      throw error;
+    }
+  }
+
   //==================================== Create user profile =========================
   async createProfile(payload) {
     try {

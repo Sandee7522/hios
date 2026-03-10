@@ -318,7 +318,6 @@ export default function InstructorDashboard() {
           </div>
         </div>
       </DashboardLayout>
-      <Footer />
     </>
   );
 }

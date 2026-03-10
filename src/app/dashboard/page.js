@@ -28,7 +28,7 @@ export default function DashboardPage() {
             switch (role) {
                 case 'admin':
                     console.log('Redirecting to admin dashboard');
-                    router.push('/dashboard/admin-dasboard');
+                    router.push('/dashboard/admin');
                     break;
                 case 'instructor':
                     console.log('Redirecting to instructor dashboard');

@@ -31,15 +31,25 @@ export async function requestWithAuth(url, options = {}) {
     }
   }
 
+  const isFormData = body instanceof FormData;
+
   const headers = {
-    "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
+
+  // Don't set Content-Type for FormData — browser sets it with boundary
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const response = await fetch(url, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body
+      ? isFormData
+        ? body
+        : JSON.stringify(body)
+      : undefined,
   });
 
   // Try to parse JSON but don't crash if body is empty

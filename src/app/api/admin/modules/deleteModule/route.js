@@ -1,8 +1,7 @@
-// app/api/modules/delete/route.js
 import { NextResponse } from "next/server";
 import * as z from "zod";
 import connectDB from "@/config/database";
-import ModuleService from "@/services/moduleService";
+import CourseServises from "@/services/courses";
 import { AdminAuthentication } from "@/utils/jwt";
 import { serverError, success } from "@/utils/apiResponse";
 
@@ -19,9 +18,13 @@ export async function POST(req) {
 
     const body = await req.json();
     const parsed = deleteModuleSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ success: false, message: "Validation error", errors: parsed.error.errors }, { status: 400 });
+    if (!parsed.success)
+      return NextResponse.json(
+        { success: false, message: "Validation error", errors: parsed.error.errors },
+        { status: 400 },
+      );
 
-    const service = new ModuleService();
+    const service = new CourseServises();
     const result = await service.deleteModule(parsed.data.id);
 
     return success("Module deleted successfully", result.data);

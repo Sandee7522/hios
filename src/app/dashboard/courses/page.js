@@ -4,104 +4,27 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import DashboardLayout from "../component/DashboardLayout";
-import styles from "../dashboard.module.css";
-import { getUserProfile, getUserRole } from "../utils/auth";
 import { GET_ALL_COURSES } from "../utils/api";
 import { requestWithAuth } from "../utils/apiClient";
-import Footer from "@/components/landing/Footer";
-import { useRouter } from "next/navigation";
 import MyLoader from "@/components/landing/MyLoder";
 
-export default function UserDashboard() {
-  const [profile, setProfile] = useState(null);
+export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const router = useRouter();
-
-
-  /**
-   * Format duration object {hours, minutes} to readable string
-   * Reusable helper function to prevent React rendering errors
-   */
-  const formatDuration = (duration) => {
-    if (!duration) return null;
-    if (typeof duration === "string") return duration;
-    if (typeof duration === "object") {
-      const hours = duration.hours || 0;
-      const minutes = duration.minutes || 0;
-      if (hours > 0 && minutes > 0) {
-        return `${hours}h ${minutes}m`;
-      } else if (hours > 0) {
-        return `${hours}h`;
-      } else if (minutes > 0) {
-        return `${minutes}m`;
-      }
-    }
-    return null;
-  };
 
   useEffect(() => {
-    const userProfile = getUserProfile();
-    setProfile(userProfile);
-
-    const role = getUserRole();
-    if (role !== "user" && role !== "student") {
-      setError("You do not have permission to view the student dashboard.");
-      setLoading(false);
-      return;
-    }
-
     const fetchCourses = async () => {
       try {
-        // Fetch published courses list; backend already filters to isPublished=true
         const response = await requestWithAuth(GET_ALL_COURSES, {
           method: "POST",
-          body: {
-            page: 1,
-            pageSize: 10,
-            sort: "desc",
-          },
-          // Any authenticated learner-type role can access this
+          body: { page: 1, pageSize: 20, sort: "desc" },
           allowedRoles: ["user", "student"],
         });
 
-        const result = response?.data;
-        console.log("result::::::::::::::::::::", result);
-        const apiCourses = result?.data || [];
-
-        // Map API courses with all important fields for UI display
-        const mappedCourses = apiCourses.map((course) => ({
-          id: course._id,
-          name: course.title,
-          slug: course.slug,
-          description: course.description,
-          thumbnail: course.thumbnail,
-          previewVideo: course.previewVideo,
-          instructor: course.instructorId?.name || "Unknown instructor",
-          instructorId: course.instructorId,
-          categoryId: course.categoryId,
-          level: course.level,
-          courseLanguage: course.courseLanguage,
-          price: course.price,
-          discount: course.discount,
-          totalFee: course.totalFee,
-          currency: course.currency || "INR",
-          partialPaymentEnabled: course.partialPaymentEnabled,
-          minimumPayment: course.minimumPayment,
-          duration: course.duration,
-          requirements: course.requirements || [],
-          whatYouWillLearn: course.whatYouWillLearn || [],
-          tags: course.tags || [],
-          progress: course.progress || 0,
-          status: course.status,
-          isPublished: course.isPublished,
-        }));
-
-        setCourses(mappedCourses);
+        const apiCourses = response?.data?.data || [];
+        setCourses(apiCourses);
       } catch (err) {
-        console.error("User dashboard load error:", err);
-        setError(err.message || "Failed to load courses.");
+        console.error("Failed to load courses:", err);
       } finally {
         setLoading(false);
       }
@@ -119,242 +42,103 @@ export default function UserDashboard() {
   }
 
   return (
-    <>
-      <DashboardLayout role="user">
-        <div className={styles.fadeIn}>
-          {error && (
-            <div
-              style={{
-                padding: "1rem",
-                marginBottom: "1.5rem",
-                borderRadius: "var(--dashboard-radius-md)",
-                backgroundColor: "var(--dashboard-danger-light)",
-                color: "var(--dashboard-danger)",
-                fontSize: "0.875rem",
-              }}
-            >
-              {error}
-            </div>
-          )}
-          {/* Welcome Section */}
-          <div
-            className={`${styles.mb3} flex flex-col items-center text-center`}
-          >
-            <h1 className={styles.headerTitle}>
-              Welcome back, {profile?.name || "Student"}! 👋
-            </h1>
-            <p className={styles.textSecondary}>
-              Here's your learning progress overview
-            </p>
-            <p className={`${styles.textSecondary} mt-2`}>
-              This page contains all your published courses.
-            </p>
-            <p className={`${styles.textPrimary} mt-2 font-semibold`}>
-              Keep pushing forward—every step takes you closer to your goals! 🚀
-            </p>
-          </div>
+    <DashboardLayout role="user">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-white">Explore Courses</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            {courses.length} courses available
+          </p>
+        </motion.div>
 
-          {/* Enrolled Courses */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>All Courses</h2>
-              <button
-                className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSmall}`}
+        {/* Course Grid */}
+        {courses.length === 0 ? (
+          <p className="text-slate-500 text-center py-16">
+            No courses available right now.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {courses.map((course, i) => (
+              <motion.div
+                key={course._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.4 }}
               >
-                Browse Courses
-              </button>
-            </div>
-
-            <div className={styles.cardBody}>
-              {/* Responsive grid: 1 col mobile, 2 col sm, 3 col lg+ */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {courses.map((course) => (
-                  <div
-                    key={course.id || course._id}
-                    className={`
-            ${styles.card} 
-            ${styles.cardHover} 
-            flex flex-col 
-            overflow-hidden 
-            transition-all duration-300 
-            hover:shadow-xl hover:-translate-y-1
-          `}
-                  >
-                    {/* Course Thumbnail */}
-                    {course.thumbnail && (
-                      <div className="aspect-4/3 w-full overflow-hidden bg-gray-100">
+                <Link href={`/dashboard/component/${course.slug}`}>
+                  <div className="group rounded-2xl border border-white/8 bg-white/[0.03] overflow-hidden cursor-pointer hover:border-blue-500/25 transition-all duration-300 hover:-translate-y-1">
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video overflow-hidden bg-slate-800">
+                      {course.thumbnail ? (
                         <img
                           src={course.thumbnail}
-                          alt={course.name || "Course thumbnail"}
-                          className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                          alt={course.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-600 text-sm">
+                          No Image
+                        </div>
+                      )}
 
-                    {/* Card Content */}
-                    <div className="flex flex-col grow p-5 md:p-6">
-                      <h3
-                        className={`${styles.cardTitle} text-lg md:text-xl mb-2 line-clamp-2`}
-                      >
-                        {course.name || course.title || "Untitled Course"}
+                      {/* Level badge */}
+                      {course.level && (
+                        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider bg-black/50 text-white backdrop-blur-sm border border-white/10">
+                          {course.level}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-5 space-y-3">
+                      {/* Title */}
+                      <h3 className="text-base font-semibold text-white line-clamp-2 group-hover:text-blue-400 transition-colors">
+                        {course.title}
                       </h3>
 
-                      {/* Short Description */}
-                      {course.shortDescription && (
-                        <p
-                          className={`${styles.textMuted} text-sm md:text-base mb-4 line-clamp-3`}
-                        >
-                          {course.shortDescription}
-                        </p>
-                      )}
-
-                      {/* Meta Info */}
-                      <div className="text-xs md:text-sm text-muted-foreground space-y-1 mb-4">
-                        {course.instructor && (
-                          <p>
-                            Instructor:{" "}
-                            <span className={styles.textSecondary}>
-                              {course.instructor}
-                            </span>
-                          </p>
-                        )}
-                        {course.level && (
-                          <p>
-                            Level:{" "}
-                            <span className="capitalize">{course.level}</span>
-                          </p>
-                        )}
-                        {course.duration && formatDuration(course.duration) && (
-                          <p>Duration: {formatDuration(course.duration)}</p>
-                        )}
+                      {/* Instructor */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                          {(course.instructorId?.name || "U").charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm text-slate-400 truncate">
+                          {course.instructorId?.name || "Unknown"}
+                        </span>
                       </div>
 
-                      {/* Price Block */}
-
-                      {/* What You Will Learn */}
-                      {course.whatYouWillLearn?.length > 0 && (
-                        <div className="mb-4 md:mb-5">
-                          <p
-                            className={`${styles.textSecondary} text-[11px] sm:text-xs md:text-sm font-semibold mb-2`}
-                          >
-                            What You'll Learn:
-                          </p>
-                          <ul
-                            className="
-                            text-[11px] sm:text-xs md:text-sm
-                            text-muted-foreground
-                            flex flex-wrap gap-x-3 gap-y-1.5
-                            list-disc pl-5
-                            marker:text-primary/70
-                            sm:pl-4
-                          "
-                            style={{
-                              // Reduce unnecessary left space on small screens, more list in single line on wide screens
-                              marginLeft: 0,
-                            }}
-                          >
-                            {course.whatYouWillLearn
-                              .slice(0, 3)
-                              .map((item, idx) => (
-                                <li
-                                  key={idx}
-                                  className="flex-1 min-w-30 max-w-[60%] truncate md:max-w-[70%] wrap-break-word"
-                                  style={{ listStylePosition: "inside" }}
-                                >
-                                  {item}
-                                </li>
-                              ))}
-                            {course.whatYouWillLearn.length > 3 && (
-                              <li className="text-primary/80 text-[11px] sm:text-xs min-w-fit font-medium">
-                                +{course.whatYouWillLearn.length - 3} more
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* Tags */}
-                      {course.tags?.length > 0 && (
-                        <div
-                          className="flex flex-wrap gap-2 mb-2 md:mb-3"
-                          style={{
-                            backgroundColor:
-                              "var(--dashboard-surface, #f4f4f7)", // fallback color if var not found
-                            borderRadius: "12px",
-                          }}
-                        >
-                          {course.tags.slice(0, 3).map((tag, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-muted border border-border text-muted-foreground whitespace-nowrap"
-                              style={{
-                                backgroundColor: "rgba(246, 222, 222, 0.04)",
-                                marginRight: "0.5rem",
-                                marginBottom: "0.15rem",
-                              }}
-                            >
-                              {tag}
+                      {/* Price */}
+                      <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-lg font-bold text-white">
+                            {course.currency || "INR"}{" "}
+                            {Number(course.totalFee || 0).toLocaleString()}
+                          </span>
+                          {course.discount > 0 && course.price > 0 && (
+                            <span className="text-xs text-slate-500 line-through">
+                              {course.currency || "INR"} {course.price.toLocaleString()}
                             </span>
-                          ))}
+                          )}
                         </div>
-                      )}
-                      {course.totalFee !== undefined && (
-                        <div className="mb-4 md:mb-5 p-3 md:p-4 rounded-xl bg-muted/40 border border-border">
-                          {/* Original Price + Discount */}
-
-                          {/* Final Price (Professional UI, Responsive) */}
-                          <div className="flex flex-col sm:flex-row sm:flex-wrap items-end gap-2 sm:gap-3">
-                            <span className="text-xl xs:text-2xl md:text-3xl font-extrabold text-primary tracking-tight whitespace-nowrap flex items-baseline gap-2 sm:gap-3">
-                              {/* Price and currency */}
-                              <span>
-                                {course.currency}
-                                <span
-                                  style={{
-                                    fontVariantNumeric: "tabular-nums",
-                                    letterSpacing: "0.02em",
-                                  }}
-                                  className="ml-0.5"
-                                >
-                                  {course.totalFee.toLocaleString(undefined, {
-                                    minimumFractionDigits: 0,
-                                  })}
-                                  .00
-                                </span>
-                              </span>
-
-                              {/* Discount - show below price on mobile, right to price on md+ */}
-                              {course.discount > 0 && course.price && (
-                                <span className="flex flex-row items-baseline space-x-2">
-                                  <span className="text-xs md:text-sm text-muted-foreground line-through whitespace-nowrap">
-                                    {course.currency}{" "}
-                                    {course.price.toLocaleString()}
-                                  </span>
-                                  <span className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium whitespace-nowrap">
-                                    -{course.discount}% OFF
-                                  </span>
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Button */}
-                      <button
-                        className={`${styles.btn} ${styles.btnSecondary} mt-[-4px w-full py-3 text-sm md:text-base`}
-                        onClick={() => router.push(`/dashboard/component/${course.slug}`)}
-                      >
-                        Continue
-                      </button>
+                        {course.discount > 0 && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold border border-emerald-500/20">
+                            {course.discount}% OFF
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                </Link>
+              </motion.div>
+            ))}
           </div>
-        </div>
-      </DashboardLayout>
-    </>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

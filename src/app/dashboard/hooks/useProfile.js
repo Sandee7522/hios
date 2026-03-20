@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createProfile, updateProfile, getProfileById } from "../services/profile.service";
-import { toast } from "react-hot-toast";
 
 // Hook to create a profile
 export const useCreateProfile = () => {
@@ -8,13 +7,8 @@ export const useCreateProfile = () => {
 
     return useMutation({
         mutationFn: createProfile,
-        onSuccess: (data) => {
-            toast.success("Profile created successfully!");
-            // Invalidate queries to refresh data
+        onSuccess: () => {
             queryClient.invalidateQueries(["profile"]);
-        },
-        onError: (error) => {
-            toast.error(error.message || "Failed to create profile");
         },
     });
 };
@@ -25,12 +19,8 @@ export const useUpdateProfile = () => {
 
     return useMutation({
         mutationFn: updateProfile,
-        onSuccess: (data) => {
-            toast.success("Profile updated successfully!");
+        onSuccess: () => {
             queryClient.invalidateQueries(["profile"]);
-        },
-        onError: (error) => {
-            toast.error(error.message || "Failed to update profile");
         },
     });
 };
@@ -40,11 +30,8 @@ export const useGetProfile = (userId) => {
     return useQuery({
         queryKey: ["profile", userId],
         queryFn: () => getProfileById(userId),
-        enabled: !!userId, // Only run if userId is provided
-        retry: 1, // Retry once on failure
-        staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-        onError: (error) => {
-            toast.error(error.message || "Failed to fetch profile");
-        }
+        enabled: !!userId,
+        retry: 1,
+        staleTime: 1000 * 60 * 5,
     });
 };

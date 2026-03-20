@@ -6,34 +6,43 @@ import { NextResponse } from "next/server";
 import * as z from "zod";
 
 const makeEnrollSchema = z.object({
-  courseId: z.string().min(1, "Course id_equired"),
-  progress: z.number().min(0).max(100).optional(),
-  completedLessons: z.array(z.string()).optional(),
+  courseId: z.string().min(1, "Course id required"),
+  totalFee: z.coerce.number().min(0).optional(),
 });
 
 export async function POST(req) {
   try {
     await connectDB();
-    const user = await VerifyToken();
+
+    const tokenResult = await VerifyToken(req);
+    if (!tokenResult.status) {
+      return NextResponse.json(
+        { success: false, message: tokenResult.message },
+        { status: tokenResult.code || 401 },
+      );
+    }
 
     const body = await req.json();
     const validated = makeEnrollSchema.parse(body);
 
     const service = new PaymentServise();
     const result = await service.enrollUserProcess({
-      userId: user.data._id,
-      ...validated,
+      userId: tokenResult.data.user._id,
+      courseId: validated.courseId,
+      totalPaid: 0,
+      remainingAmount: validated.totalFee || 0,
     });
 
-    return success("Make enroll succesfully", result);
+    if (!result.success) {
+      return NextResponse.json(result, { status: 200 });
+    }
+
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error("Error in POST make enroll:", error);
     if (error?.name === "ZodError") {
       return NextResponse.json(
-        {
-          success: false,
-          message: error.issues?.[0]?.message || "Validation error",
-        },
+        { success: false, message: error.issues?.[0]?.message || "Validation error" },
         { status: 400 },
       );
     }

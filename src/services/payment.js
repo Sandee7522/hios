@@ -83,7 +83,8 @@ export default class PaymentServise {
       }
 
       const enrollments = await Enrollments.find({ userId })
-        .populate("courseId", "title description price")
+        .populate("courseId", "title description price thumbnail slug totalFee currency")
+        .populate({ path: "courseId", populate: { path: "instructorId", select: "name" } })
         .lean();
 
       return {

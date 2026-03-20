@@ -257,6 +257,7 @@ export default class AuthService {
         bio,
         phone,
         dateOfBirth,
+        gender,
         address,
         socialLinks,
         profileImage,
@@ -265,10 +266,9 @@ export default class AuthService {
 
       const existingProfile = await UserDetails.findOne({ user_id });
       if (existingProfile) {
-        return {
-          status: 409,
-          message: "Profile already exists",
-        };
+        // Profile exists — update it instead of blocking
+        console.log("[AuthService.createProfile] Profile exists, updating instead...");
+        return await this.updateProfile(payload);
       }
 
       const profile = await UserDetails.create({
@@ -277,6 +277,7 @@ export default class AuthService {
         bio,
         phone,
         dateOfBirth,
+        gender,
         address,
         socialLinks,
         profileImage,
@@ -301,13 +302,20 @@ export default class AuthService {
   async getProfileById(payload) {
     try {
       const { user_id } = payload;
+      console.log("[AuthService.getProfileById] user_id:", user_id);
 
       const profile = await UserDetails.findOne({ user_id })
         .populate("user_id", "name email")
         .lean();
 
+      console.log("[AuthService.getProfileById] profile found:", !!profile, profile);
+
       if (!profile) {
-        return notFound("Profile not found");
+        return {
+          status: 404,
+          message: "Profile not found",
+          data: null,
+        };
       }
 
       return {
@@ -316,7 +324,7 @@ export default class AuthService {
         data: profile,
       };
     } catch (error) {
-      console.log("Get profile error:", error);
+      console.error("[AuthService.getProfileById] Error:", error);
       throw error;
     }
   }
@@ -331,13 +339,14 @@ export default class AuthService {
         bio,
         phone,
         dateOfBirth,
+        gender,
         address,
         socialLinks,
         profileImage,
         profileImageId,
       } = payload;
 
-      console.log("Update profile :::::::::::", payload);
+      console.log("[AuthService.updateProfile] payload:", payload);
 
       const updatedProfile = await UserDetails.findOneAndUpdate(
         { user_id },
@@ -346,6 +355,7 @@ export default class AuthService {
           bio,
           phone,
           dateOfBirth,
+          gender,
           address,
           socialLinks,
           ...(profileImage && { profileImage }),

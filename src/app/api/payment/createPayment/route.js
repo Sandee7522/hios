@@ -1,32 +1,45 @@
 import connectDB from "@/config/database";
 import PaymentServise from "@/services/payment";
-import { serverError, success } from "@/utils/apiResponse";
 import { VerifyToken } from "@/utils/jwt";
+import { NextResponse } from "next/server";
+import * as z from "zod";
 
 const createPaymentSchema = z.object({
-  userId: z.string().min(1, "userId is required"),
   courseId: z.string().min(1, "courseId is required"),
-  enrollmentId: z.string().min(1, "EnrollmentId is required"),
+  enrollmentId: z.string().min(1, "enrollmentId is required"),
   razorpayOrderId: z.string().min(3),
-  amount: z.number().positive(),
+  amount: z.coerce.number().positive(),
+  currency: z.string().default("INR"),
 });
 
 export async function POST(req) {
   try {
     await connectDB();
 
-    const tokenUser = await VerifyToken(req);
+    const tokenResult = await VerifyToken(req);
+    if (!tokenResult.status) {
+      return NextResponse.json(
+        { success: false, message: tokenResult.message },
+        { status: tokenResult.code || 401 },
+      );
+    }
+
+    const userId = tokenResult.data.user._id.toString();
     const body = await req.json();
+    const validated = createPaymentSchema.parse(body);
 
-    const validated = createPaymentSchema.parse({
-      ...body,
-      userId: tokenUser.id,
-    });
     const service = new PaymentServise();
-    const result = await service.createPayment(validated);
+    const result = await service.createPayment({
+      userId,
+      ...validated,
+    });
 
-    return success("Pyment created Successfuly", result);
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    return serverError(error.message);
+    console.error("Create Payment Error:", error);
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
   }
 }

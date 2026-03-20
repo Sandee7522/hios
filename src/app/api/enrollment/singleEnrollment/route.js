@@ -1,40 +1,46 @@
 import connectDB from "@/config/database";
 import PaymentServise from "@/services/payment";
-import { serverError, success } from "@/utils/apiResponse";
 import { VerifyToken } from "@/utils/jwt";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 
 const getSchema = z.object({
-  courseId: z.string().min(1, "course id requred"),
+  courseId: z.string().min(1, "course id required"),
 });
 
 export async function POST(req) {
   try {
     await connectDB();
-    const user = VerifyToken();
+
+    const tokenResult = await VerifyToken(req);
+    if (!tokenResult.status) {
+      return NextResponse.json(
+        { success: false, message: tokenResult.message },
+        { status: tokenResult.code || 401 },
+      );
+    }
 
     const body = await req.json();
     const validated = getSchema.parse(body);
 
-    const service = PaymentServise();
+    const service = new PaymentServise();
     const result = await service.getEnrollment({
-      userId: user.data._id,
+      userId: tokenResult.data.user._id,
       courseId: validated.courseId,
     });
-    return success("Single Enrollment Successfully", result);
+
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    console.log("Error Single Enrollment", error);
+    console.error("Error Single Enrollment:", error);
     if (error?.name === "ZodError") {
       return NextResponse.json(
-        {
-          success: false,
-          message: error.issues?.[0]?.message || "Validation Error",
-        },
+        { success: false, message: error.issues?.[0]?.message || "Validation Error" },
         { status: 400 },
       );
     }
-
-    serverError();
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 },
+    );
   }
 }

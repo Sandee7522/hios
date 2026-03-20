@@ -8,23 +8,29 @@ import { z } from "zod";
 /* ================= VALIDATION ================= */
 const createProfileSchema = z.object({
   user_id: z.string().min(1),
-  username: z.string().min(1),
+  username: z.string().optional(),
   bio: z.string().optional(),
-  phone: z
-    .string()
-    .regex(/^\+[1-9]\d{1,14}$/, "Invalid international phone number")
-    .optional(),
+  phone: z.string().optional(),
   dateOfBirth: z.string().optional(),
-  address: z.object({
-    street: z.string().optional(),
-    city: z.string().min(1),
-    state: z.string().optional(),
-    country: z.string().optional(),
-    zipCode: z.string().optional(),
-  }),
-  socialLinks: z.array(z.string().url()).optional(),
+  gender: z.string().optional(),
+  address: z
+    .object({
+      street: z.string().optional(),
+      city: z.string().optional(),
+      state: z.string().optional(),
+      country: z.string().optional(),
+      zipCode: z.string().optional(),
+    })
+    .optional(),
+  socialLinks: z
+    .object({
+      linkedin: z.string().optional(),
+      twitter: z.string().optional(),
+      website: z.string().optional(),
+    })
+    .optional(),
   profileImage: z.string().optional(),
-  profileImageId: z.string().optional(), // ✅ added
+  profileImageId: z.string().optional(),
 });
 
 /* ================= POST ================= */
@@ -39,63 +45,55 @@ export async function POST(req) {
 
     const formData = await req.formData();
 
-    /* ---------- files ---------- */
+    /* ---------- file upload via Cloudinary ---------- */
     const profileFile = formData.get("profileImage");
-
-    /* ---------- OPTIONAL ---------- */
     const oldPublicId = formData.get("oldProfilePublicId") || null;
 
-    /* ---------- upload (only if file exists) ---------- */
     let imageUrl = null;
-    let imagePublicId = null; // ✅ track public_id
+    let imagePublicId = null;
 
     if (profileFile && profileFile.size > 0) {
+      console.log("[CreateProfile] Uploading image to Cloudinary...");
       const uploadResult = await uploadMedia.uploadImages(
         profileFile,
         "profiles",
         oldPublicId,
       );
-
-      const imageData = uploadMedia.getUploadImage(uploadResult); // ✅ now returns { url, public_id }
-
+      const imageData = uploadMedia.getUploadImage(uploadResult);
       if (imageData) {
-        imageUrl = imageData.url; // ✅ extract url
-        imagePublicId = imageData.public_id; // ✅ extract public_id
+        imageUrl = imageData.url;
+        imagePublicId = imageData.public_id;
+        console.log("[CreateProfile] Image uploaded:", imageUrl);
       }
     }
 
-    /* ---------- safe JSON parse ---------- */
+    /* ---------- parse JSON fields ---------- */
     let address = {};
-    let socialLinks = [];
-
-    try {
-      address = JSON.parse(formData.get("address") || "{}");
-    } catch {}
-
-    try {
-      socialLinks = JSON.parse(formData.get("socialLinks") || "[]");
-    } catch {}
+    let socialLinks = {};
+    try { address = JSON.parse(formData.get("address") || "{}"); } catch {}
+    try { socialLinks = JSON.parse(formData.get("socialLinks") || "{}"); } catch {}
 
     /* ---------- build params ---------- */
     const params = {
-      user_id: formData.get("user_id") || "",
-      username: formData.get("username") || "",
+      user_id: auth.data.user._id.toString(),
+      username: formData.get("username") || undefined,
       bio: formData.get("bio") || undefined,
       phone: formData.get("phone") || undefined,
       dateOfBirth: formData.get("dateOfBirth") || undefined,
+      gender: formData.get("gender") || undefined,
       address,
       socialLinks,
       profileImage: imageUrl || undefined,
       profileImageId: imagePublicId || undefined,
     };
 
-    console.log("PARAMS:", params);
+    console.log("[CreateProfile] Params:", params);
 
     /* ---------- validate ---------- */
     const validation = createProfileSchema.safeParse(params);
-
     if (!validation.success) {
       const errors = validation.error.issues.map((e) => e.message);
+      console.error("[CreateProfile] Validation errors:", errors);
       return validationError(errors, 422);
     }
 
@@ -105,7 +103,7 @@ export async function POST(req) {
 
     return success(result.message, result.data);
   } catch (error) {
-    console.error(error);
+    console.error("[CreateProfile] Error:", error);
     return serverError(error.message);
   }
 }

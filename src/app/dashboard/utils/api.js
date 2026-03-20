@@ -21,13 +21,22 @@ export const FORGET_PASSWORD = `${API_URL}/auth/forgetPassword`;
 export const RESET_PASSWORD = `${API_URL}/auth/resetPassword`;
 export const CREATE_PROFILE = `${API_URL}/auth/profile/createProfile`;
 export const UPDATE_PROFILE = `${API_URL}/auth/profile/updateProfile`;
-export const GET_POFILE_BY_ID = `${API_URL}/post/getProfileById`;
+export const GET_PROFILE_BY_ID = (userId) => `${API_URL}/auth/profile/getProfileById/${userId}`;
 export const GET_ALL_CATEGORY = `${API_URL}/category/getAllCategory`;
 export const GET_ALL_COURSES = `${API_URL}/courses/getAllCourse`;
 export const GET_COURSE_BY_SLUG = (slug) => `${API_URL}/courses/${slug}`;
 export const GET_ALL_MODULES_BYID = `${API_URL}/module&Lessons/getModuleById`;
 export const MODULE_BY_COURSEID = `${API_URL}/module&Lessons/moduleByCourseId`;
 export const GET_LESSON = `${API_URL}/module&Lessons/getLesson`;
+
+// Payment & Enrollment APIs
+export const CREATE_ORDER = `${API_URL}/payment/createOrder`;
+export const CREATE_PAYMENT = `${API_URL}/payment/createPayment`;
+export const VERIFY_PAYMENT = `${API_URL}/payment/verifyPayment`;
+export const FAILED_PAYMENT = `${API_URL}/payment/failedPayment`;
+export const MAKE_ENROLL = `${API_URL}/enrollment/makeEnroll`;
+export const SINGLE_ENROLLMENT = `${API_URL}/enrollment/singleEnrollment`;
+export const USER_ENROLLMENTS = `${API_URL}/enrollment/userEnrollment`;
 
 // **********************************            *************************************
 //                                   ADMIN API'S

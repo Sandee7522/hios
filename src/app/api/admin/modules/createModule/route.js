@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import connectDB from "@/config/database";
 import CourseServises from "@/services/courses";
 import { serverError, success } from "@/utils/apiResponse";

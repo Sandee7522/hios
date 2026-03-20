@@ -55,7 +55,7 @@ export default function AdminTable({
     emptyText = "No records found",
 }) {
     return (
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-2">
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 shadow-lg overflow-hidden">
 
                 {/* ── Card Header ── */}
@@ -123,7 +123,7 @@ export default function AdminTable({
                                         />
                                     </th>
                                 ))}
-                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider sticky right-0 bg-slate-900 z-10">
                                     Actions
                                 </th>
                             </tr>

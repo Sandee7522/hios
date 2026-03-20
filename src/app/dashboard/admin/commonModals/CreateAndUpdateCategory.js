@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
-import { PiPlusCircleBold } from "react-icons/pi";
-import styles from "../../dashboard.module.css";
+import { PiPlusCircleBold, PiPencilSimpleBold } from "react-icons/pi";
 
 import {
   CREATE_CATEGORY_ADMIN,
@@ -13,8 +12,7 @@ import "./category.css";
 import CustomInput from "@/components/common/CustomInpute";
 
 const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
-
-  const isEdit = !!initialData;
+  const isEdit = !!initialData?._id;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -28,7 +26,7 @@ const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (initialData) {
+    if (initialData?._id) {
       setFormData({
         name: initialData.name || "",
         slug: initialData.slug || "",
@@ -53,32 +51,29 @@ const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
       setLoading(true);
       setError("");
 
-      const url = isEdit
-        ? `${UPDATE_CATEGORY_ADMIN}/${initialData._id}`
-        : CREATE_CATEGORY_ADMIN;
-
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await requestWithAuth(url, {
-        method,
-        body: JSON.stringify(formData),
-      });
-
-      const result = await res.json();
-
-      if (res.status === 200 || res.status === 201) {
-        onSuccess?.(
-          isEdit
-            ? "Category updated successfully"
-            : "Category created successfully"
-        );
-        onClose();
+      if (isEdit) {
+        // Update — POST to updateCategoryById with categoryId in body
+        await requestWithAuth(UPDATE_CATEGORY_ADMIN, {
+          method: "POST",
+          body: { categoryId: initialData._id, ...formData },
+          allowedRoles: ["admin"],
+        });
       } else {
-        setError(result?.message || "Something went wrong");
+        // Create — POST to createCategory
+        await requestWithAuth(CREATE_CATEGORY_ADMIN, {
+          method: "POST",
+          body: formData,
+          allowedRoles: ["admin"],
+        });
       }
+
+      onSuccess?.(
+        isEdit ? "Category updated successfully" : "Category created successfully"
+      );
+      onClose();
     } catch (err) {
       console.error(err);
-      setError("Server error. Please try again.");
+      setError(err.message || "Server error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -86,15 +81,19 @@ const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className={styles.card} onClick={(e) => e.stopPropagation()}>
+      <div className="delete-modal-container" style={{ maxWidth: "520px" }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="create_name">
-            <PiPlusCircleBold size={34} color="#2563eb" />
+            {isEdit ? (
+              <PiPencilSimpleBold size={28} color="#3b82f6" />
+            ) : (
+              <PiPlusCircleBold size={28} color="#3b82f6" />
+            )}
             <h2>{isEdit ? "Update Category" : "Create Category"}</h2>
           </div>
 
           <button className="modal-close-btn" onClick={onClose}>
-            <IoClose size={24} />
+            <IoClose size={20} />
           </button>
         </div>
 

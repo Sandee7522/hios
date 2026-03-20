@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import * as z from "zod";
 import connectDB from "@/config/database";
-import ModuleService from "@/services/moduleService";
 import { serverError, success } from "@/utils/apiResponse";
 import { AdminAuthentication } from "@/utils/jwt";
 import CourseServises from "@/services/courses";

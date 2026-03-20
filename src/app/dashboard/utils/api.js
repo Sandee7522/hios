@@ -48,23 +48,24 @@ export const GET_ALL_ROLES = `${API_URL}/roleAssign/roles`;
 export const ASSIGN_ROLE = `${API_URL}/auth/assignRole`;
 export const GET_ALL_ROLE = `${API_URL}/auth/getAllRoles`;
 
-// not integrated thes API
 export const GET_ALL_CATEGORY_ADMIN = `${API_URL}/admin/category/getAllCategory`;
 export const CREATE_CATEGORY_ADMIN = `${API_URL}/admin/category/createCategory`;
-export const UPDATE_CATEGORY_ADMIN = `${API_URL}/admin/category/updateCategory`;
+export const UPDATE_CATEGORY_ADMIN = `${API_URL}/admin/category/updateCategoryById`;
 export const DELETE_CATEGORY_ADMIN = `${API_URL}/admin/category/deleteCategory`;
+export const GET_CATEGORY_BY_ID_ADMIN = `${API_URL}/admin/category/getCategoryById`;
 
 // not integrated thes API
 export const GET_ALL_COURSES_ADMIN = `${API_URL}/admin/course/getAllCourse`;
 export const GET_COURSE_BY_ID_ADMIN = `${API_URL}/admin/course/getCourseById`;
 export const UPDATE_COURSE_ADMIN = `${API_URL}/admin/course/updateCourse`;
 export const DELETE_COURSE_ADMIN = `${API_URL}/admin/course/deleteCourse`;
-export const CREATE_MODULE_ADMIN = `${API_URL}/admin/module/createModule`;
-export const UPDATE_MODULE_ADMIN = `${API_URL}/admin/module/updateModule`;
-export const DELETE_MODULE_ADMIN = `${API_URL}/admin/module/deleteModule`;
-export const GET_ALL_MODULES_BYID_ADMIN = `${API_URL}/admin/module/getAllModules`;
-export const MODULE_BY_COURSEID_ADMIN = `${API_URL}/admin/module/getModuleById`;
-export const RECODER_MODULE_ADMIN = `${API_URL}/admin/module/recodeModule`;
+export const CREATE_MODULE_ADMIN = `${API_URL}/admin/modules/createModule`;
+export const UPDATE_MODULE_ADMIN = `${API_URL}/admin/modules/updateModule`;
+export const DELETE_MODULE_ADMIN = `${API_URL}/admin/modules/deleteModule`;
+export const GET_MODULE_BY_ID_ADMIN = `${API_URL}/admin/modules/getModuleById`;
+export const MODULE_BY_COURSEID_ADMIN = `${API_URL}/admin/modules/moduleByCourseId`;
+export const RECODER_MODULE_ADMIN = `${API_URL}/admin/modules/recoderModule`;
+export const CREATE_COURSE_ADMIN = `${API_URL}/admin/course/createCourse`;
 export const CREATE_LESSON_ADMIN = `${API_URL}/admin/lesson/createLesson`;
 export const DELETE_LESSON_ADMIN = `${API_URL}/admin/lesson/deleteLesson`;
 export const GET_LESSON_ADMIN = `${API_URL}/admin/lesson/getLesson`;

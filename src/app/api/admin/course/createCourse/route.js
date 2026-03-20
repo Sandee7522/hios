@@ -16,7 +16,7 @@ const createCourseSchema = z.object({
   thumbnailId: z.string().optional(), // ✅ added
   previewVideo: z.string().url().optional().or(z.literal("")),
 
-  instructorId: z.string().min(1),
+  instructorId: z.string().min(1, "Please login to create a course"),
   categoryId: z.string().optional(),
 
   level: z.enum(["beginner", "intermediate", "advanced"]).optional(),

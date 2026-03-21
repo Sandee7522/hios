@@ -70,9 +70,9 @@ function SidebarNav({ pathname, openMenus, toggleMenu, onClose }) {
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-slate-800 shrink-0">
-        <span className="flex items-center gap-2 text-sm font-bold text-white tracking-wide">
-          <FiHome size={16} className="text-blue-400" />
+      <div className="flex items-center justify-between px-5 py-5 border-b border-indigo-900/35 shrink-0 bg-slate-950/35">
+        <span className="flex items-center gap-2.5 text-[20px] font-bold text-slate-100 tracking-wide">
+          <FiHome size={18} className="text-slate-300" />
           Admin Panel
         </span>
         {/* Close button – only rendered in mobile drawer */}
@@ -81,7 +81,7 @@ function SidebarNav({ pathname, openMenus, toggleMenu, onClose }) {
             onClick={onClose}
             aria-label="Close sidebar"
             className="flex items-center justify-center p-1 rounded-md
-                       text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                       text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <FiX size={18} />
           </button>
@@ -89,8 +89,8 @@ function SidebarNav({ pathname, openMenus, toggleMenu, onClose }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-3 overflow-y-auto">
-        <ul className="flex flex-col gap-0.5">
+      <nav className="flex-1 px-4 py-4 overflow-y-auto">
+        <ul className="flex flex-col gap-1.5">
           {menuIconMap.map((item, index) => {
             if (item.children) {
               const menuOpen = openMenus[item.key];
@@ -100,18 +100,18 @@ function SidebarNav({ pathname, openMenus, toggleMenu, onClose }) {
                     onClick={() => toggleMenu(item.key)}
                     aria-expanded={menuOpen}
                     className="w-full flex items-center justify-between
-                               px-3 py-2 rounded-lg text-sm
-                               text-slate-400 hover:text-white hover:bg-white/5
+                               px-3.5 py-2.5 rounded-xl text-[18px]
+                               text-slate-300/80 hover:text-white hover:bg-slate-800/60
                                transition-colors duration-150"
                   >
-                    <span className="flex items-center gap-2.5">
-                      <span className="text-slate-500 shrink-0">{item.icon}</span>
+                    <span className="flex items-center gap-3">
+                      <span className="text-slate-400 shrink-0">{item.icon}</span>
                       <span className="truncate">{item.key}</span>
                     </span>
                     <motion.span
                       animate={{ rotate: menuOpen ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
-                      className="text-slate-600 shrink-0"
+                      className="text-slate-500 shrink-0"
                     >
                       <FiChevronDown size={14} />
                     </motion.span>
@@ -122,17 +122,17 @@ function SidebarNav({ pathname, openMenus, toggleMenu, onClose }) {
                       <motion.ul
                         variants={subMenuVariants}
                         initial="hidden" animate="visible" exit="exit"
-                        className="overflow-hidden ml-5 mt-0.5 border-l border-slate-800 flex flex-col gap-0.5"
+                        className="overflow-hidden ml-6 mt-1 border-l border-indigo-900/35 flex flex-col gap-1"
                       >
                         {item.children.map((child, i) => (
                           <li key={i}>
                             <Link
                               href={child.path}
-                              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs
+                              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[18px]
                                 no-underline transition-colors duration-150
                                 ${isActive(child.path)
-                                  ? "bg-blue-500/15 text-blue-400"
-                                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                                  ? "bg-slate-800/80 text-slate-100 border border-slate-600/60"
+                                  : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                                 }`}
                             >
                               <span className="shrink-0">{child.icon}</span>
@@ -151,14 +151,14 @@ function SidebarNav({ pathname, openMenus, toggleMenu, onClose }) {
               <li key={index}>
                 <Link
                   href={item.path}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[18px]
                     no-underline transition-colors duration-150
                     ${isActive(item.path)
-                      ? "bg-blue-500/15 text-blue-400"
-                      : "text-slate-400 hover:text-white hover:bg-white/5"
+                      ? "bg-slate-800/80 text-slate-100 border border-slate-600/60"
+                      : "text-slate-300/80 hover:text-white hover:bg-slate-800/60"
                     }`}
                 >
-                  <span className={`shrink-0 ${isActive(item.path) ? "text-blue-400" : "text-slate-500"}`}>
+                  <span className={`shrink-0 ${isActive(item.path) ? "text-slate-100" : "text-slate-400"}`}>
                     {item.icon}
                   </span>
                   <span className="truncate">{item.label}</span>
@@ -205,8 +205,8 @@ export default function Sidebar() {
     return (
       <aside
         className="fixed top-16 left-0 z-[900] flex flex-col
-                   w-[260px] h-[calc(100vh-4rem)]
-                   bg-[#0a1628] border-r border-slate-800"
+                   w-[290px] h-[calc(100vh-4rem)]
+                   bg-[linear-gradient(170deg,#141834_0%,#131730_55%,#111427_100%)] border-r border-indigo-900/35 shadow-[6px_0_24px_rgba(5,8,24,0.5)]"
       >
         <SidebarNav
           pathname={pathname}
@@ -228,8 +228,8 @@ export default function Sidebar() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.92 }}
         className="fixed top-[4.4rem] left-3 z-[1000] flex items-center justify-center
-                   w-9 h-9 rounded-lg border border-slate-700 bg-[#0a1628]
-                   text-slate-100 shadow-lg hover:border-blue-500
+                   w-9 h-9 rounded-xl border border-slate-700/80 bg-[#141834]
+                   text-slate-300 shadow-lg hover:border-slate-500 hover:bg-slate-800/70
                    transition-colors duration-200"
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -272,9 +272,9 @@ export default function Sidebar() {
             variants={drawerVariants}
             initial="hidden" animate="visible" exit="exit"
             className="fixed top-16 left-0 z-[900] flex flex-col
-                       w-[280px] sm:w-[300px]
+                       w-[300px] sm:w-[320px]
                        h-[calc(100vh-4rem)]
-                       bg-[#0a1628] border-r border-slate-800"
+                       bg-[linear-gradient(170deg,#141834_0%,#131730_55%,#111427_100%)] border-r border-indigo-900/35 shadow-[6px_0_24px_rgba(5,8,24,0.5)]"
           >
             <SidebarNav
               pathname={pathname}

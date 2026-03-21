@@ -10,6 +10,7 @@ import { requestWithAuth } from "../../utils/apiClient";
 import { getUserProfile } from "../../utils/auth";
 import MyButtonLoader from "@/components/common/MyButtonLodder";
 import CustomInput from "@/components/common/CustomInpute";
+import SearchableSelect from "@/components/common/SearchableSelect";
 import "./category.css";
 
 const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
@@ -45,16 +46,17 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [categories, setCategories] = useState([]);
+  const [categorySearch, setCategorySearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Load categories
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchCategories = async (searchText = "") => {
       try {
         const catRes = await requestWithAuth(GET_ALL_CATEGORY_ADMIN, {
           method: "POST",
-          body: { page: 1, pageSize: 100 },
+          body: { page: 1, pageSize: 100, search: searchText, sortBy: "created_at", sort: "desc" },
           allowedRoles: ["admin"],
         });
         const catList = catRes?.data?.data || catRes?.data || [];
@@ -63,8 +65,12 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
         console.error("Failed to load categories:", err);
       }
     };
-    fetchCategories();
-  }, []);
+
+    const t = setTimeout(() => {
+      fetchCategories(categorySearch.trim());
+    }, 300);
+    return () => clearTimeout(t);
+  }, [categorySearch]);
 
   // Populate form for edit
   useEffect(() => {
@@ -240,7 +246,7 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="delete-modal-container"
-        style={{ maxWidth: "640px", maxHeight: "85vh", overflowY: "auto" }}
+        style={{ maxWidth: "640px", width: "94%", maxHeight: "85vh", overflowY: "auto" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
@@ -257,7 +263,7 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
           {error && <div className="modal-error">{error}</div>}
 
           {/* Title & Slug */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-group">
               <label>Title *</label>
               <CustomInput value={formData.title} onChange={(v) => handleChange("title", v)} placeholder="Course title" disabled={loading} />
@@ -302,31 +308,46 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
           </div>
 
           {/* Instructor (auto) & Category */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-group">
               <label>Instructor</label>
               <CustomInput value={profile?.name || "Logged-in User"} disabled />
             </div>
             <div className="form-group">
               <label>Category</label>
-              <select value={formData.categoryId} onChange={(e) => handleChange("categoryId", e.target.value)} disabled={loading} className="modal-select">
-                <option value="">Select category</option>
-                {categories.map((c) => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
-                ))}
-              </select>
+              <CustomInput
+                value={categorySearch}
+                onChange={(v) => setCategorySearch(v)}
+                placeholder="Search category..."
+                disabled={loading}
+              />
+              <SearchableSelect
+                value={formData.categoryId}
+                onChange={(v) => handleChange("categoryId", v)}
+                options={categories.map((c) => ({ value: c._id, label: c.name }))}
+                placeholder="Select category"
+                searchPlaceholder="Search category..."
+                disabled={loading}
+              />
             </div>
           </div>
 
           {/* Level & Language */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-group">
               <label>Level</label>
-              <select value={formData.level} onChange={(e) => handleChange("level", e.target.value)} disabled={loading} className="modal-select">
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
+              <SearchableSelect
+                value={formData.level}
+                onChange={(v) => handleChange("level", v)}
+                options={[
+                  { value: "beginner", label: "Beginner" },
+                  { value: "intermediate", label: "Intermediate" },
+                  { value: "advanced", label: "Advanced" },
+                ]}
+                placeholder="Select level"
+                searchPlaceholder="Search level..."
+                disabled={loading}
+              />
             </div>
             <div className="form-group">
               <label>Language</label>
@@ -335,7 +356,7 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
           </div>
 
           {/* Price, Discount, Total Fee, Currency */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px" }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="form-group">
               <label>Price *</label>
               <CustomInput type="number" value={formData.price} onChange={(v) => handleChange("price", v)} placeholder="999" disabled={loading} />
@@ -355,7 +376,7 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
           </div>
 
           {/* Partial Payment & Minimum */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-group checkbox" style={{ paddingTop: "8px" }}>
               <label>
                 <input type="checkbox" checked={formData.partialPaymentEnabled} onChange={(e) => handleChange("partialPaymentEnabled", e.target.checked)} />
@@ -369,7 +390,7 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
           </div>
 
           {/* Duration */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-group">
               <label>Duration (Hours)</label>
               <CustomInput type="number" value={formData.durationHours} onChange={(v) => handleChange("durationHours", v)} placeholder="5" disabled={loading} />
@@ -390,16 +411,23 @@ const CreateAndUpdateCourse = ({ onClose, onSuccess, initialData }) => {
           {renderArrayField("Tags", tags, setTags)}
 
           {/* Status & isPublished */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="form-group">
               <label>Status</label>
-              <select value={formData.status} onChange={(e) => handleChange("status", e.target.value)} disabled={loading} className="modal-select">
-                <option value="draft">Draft</option>
-                <option value="pending">Pending</option>
-                <option value="published">Published</option>
-                <option value="archived">Archived</option>
-                <option value="rejected">Rejected</option>
-              </select>
+              <SearchableSelect
+                value={formData.status}
+                onChange={(v) => handleChange("status", v)}
+                options={[
+                  { value: "draft", label: "Draft" },
+                  { value: "pending", label: "Pending" },
+                  { value: "published", label: "Published" },
+                  { value: "archived", label: "Archived" },
+                  { value: "rejected", label: "Rejected" },
+                ]}
+                placeholder="Select status"
+                searchPlaceholder="Search status..."
+                disabled={loading}
+              />
             </div>
             <div className="form-group checkbox" style={{ alignSelf: "end", paddingBottom: "4px" }}>
               <label>

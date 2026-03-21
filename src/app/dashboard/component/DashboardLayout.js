@@ -65,6 +65,8 @@ export default function DashboardLayout({ children, role }) {
 
   if (!role) return null;
 
+  const isAdminView = role === "admin";
+
   return (
     <div className={styles.dashboardContainer}>
       {/* ================= NAVBAR ================= */}
@@ -80,7 +82,13 @@ export default function DashboardLayout({ children, role }) {
           borderBottom: "1px solid var(--dashboard-border)",
         }}
       >
-        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 1.5rem" }}>
+        <div
+          style={{
+            maxWidth: isAdminView ? "none" : "1400px",
+            margin: "0 auto",
+            padding: "0 1.5rem",
+          }}
+        >
           <div
             style={{
               display: "flex",
@@ -218,7 +226,14 @@ export default function DashboardLayout({ children, role }) {
       </motion.nav>
 
       {/* ================= MAIN ================= */}
-      <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "2rem 1.5rem" }}>
+      <main
+        style={{
+          maxWidth: isAdminView ? "none" : "1400px",
+          width: "100%",
+          margin: "0 auto",
+          padding: isAdminView ? "1rem 1.5rem 1.25rem" : "2rem 1.5rem",
+        }}
+      >
         {children}
       </main>
     </div>

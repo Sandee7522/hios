@@ -47,6 +47,7 @@ export const CREATE_ROLE = `${API_URL}/roleAssign/roles`;
 export const GET_ALL_ROLES = `${API_URL}/roleAssign/roles`;
 export const ASSIGN_ROLE = `${API_URL}/auth/assignRole`;
 export const GET_ALL_ROLE = `${API_URL}/auth/getAllRoles`;
+export const GET_ADMIN_DASHBOARD_STATS = `${API_URL}/admin/dashboard/stats`;
 
 export const GET_ALL_CATEGORY_ADMIN = `${API_URL}/admin/category/getAllCategory`;
 export const CREATE_CATEGORY_ADMIN = `${API_URL}/admin/category/createCategory`;
@@ -64,11 +65,14 @@ export const UPDATE_MODULE_ADMIN = `${API_URL}/admin/modules/updateModule`;
 export const DELETE_MODULE_ADMIN = `${API_URL}/admin/modules/deleteModule`;
 export const GET_MODULE_BY_ID_ADMIN = `${API_URL}/admin/modules/getModuleById`;
 export const MODULE_BY_COURSEID_ADMIN = `${API_URL}/admin/modules/moduleByCourseId`;
+export const GET_ALL_MODULE_ADMIN = `${API_URL}/admin/modules/getAllModule`;
 export const RECODER_MODULE_ADMIN = `${API_URL}/admin/modules/recoderModule`;
+export const REORDER_MODULE_ADMIN = `${API_URL}/admin/modules/reorderModule`;
 export const CREATE_COURSE_ADMIN = `${API_URL}/admin/course/createCourse`;
 export const CREATE_LESSON_ADMIN = `${API_URL}/admin/lesson/createLesson`;
 export const DELETE_LESSON_ADMIN = `${API_URL}/admin/lesson/deleteLesson`;
 export const GET_LESSON_ADMIN = `${API_URL}/admin/lesson/getLesson`;
+export const GET_ALL_LESSON_ADMIN = `${API_URL}/admin/lesson/getAllLesson`;
 export const RE_ORDER_LESSON = `${API_URL}/admin/lesson/reOrderLesson`;
 export const UPDATE_LESSON = `${API_URL}/admin/lesson/updateLesson`;
 

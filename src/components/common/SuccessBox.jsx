@@ -29,8 +29,9 @@ export default function SuccessBox({
       role="status"
       className={`transition-all duration-500 ease-out transform 
       ${visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3"}
-      flex justify-between items-start rounded-xl border border-emerald-500/30 -mt-14
-      bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400 ${className}`}
+      fixed top-20 right-4 z-[3000] w-[min(92vw,460px)]
+      flex justify-between items-start rounded-xl border border-emerald-500/30
+      bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400 shadow-[0_12px_28px_rgba(16,185,129,0.25)] ${className}`}
     >
       <div className="flex items-start gap-3">
         <MdCheckCircleOutline size={20} className="mt-0.5" />

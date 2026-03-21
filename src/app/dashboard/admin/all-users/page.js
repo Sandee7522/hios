@@ -6,9 +6,9 @@ import MyLoader from "@/components/landing/MyLoder";
 import { requestWithAuth } from "../../utils/apiClient";
 import SuccessBox from "@/components/common/SuccessBox";
 import ErrorBox from "@/components/common/ErrorBox";
-import { FaArrowUp, FaArrowDown } from "react-icons/fa";
-import Pagination from "@/components/common/Pagination";
 import AssignRole from "@/components/common/AssignRole";
+import PageHeader from "@/components/common/PageHeader";
+import AdminTable from "@/components/common/AdminTable";
 
 /** Debounce – delays a value by `delay` ms */
 function useDebounce(value, delay = 500) {
@@ -44,14 +44,6 @@ function StatusBadge({ verified }) {
       Unverified
     </span>
   );
-}
-
-/* ── Sort indicator ── */
-function SortIcon({ field, sortBy, sortOrder }) {
-  if (sortBy !== field) return null;
-  return sortOrder === "asc"
-    ? <FaArrowUp size={10} className="ml-1 inline text-blue-400" />
-    : <FaArrowDown size={10} className="ml-1 inline text-blue-400" />;
 }
 
 const sortFieldMap = {
@@ -159,134 +151,61 @@ export default function AllUsers() {
     );
   }
 
+  const renderRow = (user) => (
+    <tr key={user.id} className="hover:bg-slate-800/35 transition-colors duration-150">
+      <td className="px-4 py-3 whitespace-nowrap">
+        <span className="font-medium text-white">{user.name || "—"}</span>
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap text-slate-400">
+        {user.email || "—"}
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap">
+        <RoleBadge role={user.role} />
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap">
+        <StatusBadge verified={user.isEmailVerified} />
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap text-slate-400 text-xs">
+        {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-slate-900 z-10">
+        <button
+          onClick={() => { setSelectedUser(user); setShowRoleModal(true); }}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium
+                     bg-amber-500/15 text-amber-400 border border-amber-500/30
+                     hover:bg-amber-500/25 transition-colors duration-150"
+        >
+          Assign Role
+        </button>
+      </td>
+    </tr>
+  );
+
   return (
     <>
+      <PageHeader title="User Management" subtitle={`${totalCount} total users`} />
       <ErrorBox message={error} />
       <SuccessBox message={successMessage} />
-
-      <div className="w-full space-y-4">
-        {/* Card */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 shadow-lg overflow-hidden">
-
-          {/* Card Header */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between
-                          px-4 py-4 sm:px-6 border-b border-slate-800">
-            <div>
-              <h2 className="text-base font-semibold text-white">User Management</h2>
-              <p className="text-xs text-slate-500 mt-0.5">{totalCount} total users</p>
-            </div>
-            <input
-              placeholder="Search users..."
-              value={searchInput}
-              onChange={handleSearch}
-              className="w-full sm:w-64 px-3 py-2 rounded-lg text-sm
-                         bg-slate-800 border border-slate-700 text-white
-                         placeholder:text-slate-500
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                         transition-colors duration-150"
-            />
-          </div>
-
-          {/* Shimmer loading bar */}
-          <div className="h-0.5 overflow-hidden bg-transparent">
-            {tableLoading && (
-              <div className="h-full bg-linear-to-r from-transparent via-blue-500 to-transparent
-                              bg-size-[200%_100%] animate-shimmer" />
-            )}
-          </div>
-
-          {/* Table */}
-          <div
-            className="overflow-x-auto w-full"
-            style={{
-              opacity: tableLoading ? 0.55 : 1,
-              pointerEvents: tableLoading ? "none" : "auto",
-              transition: "opacity 0.25s ease",
-            }}
-          >
-            <table className="w-full min-w-160 text-sm">
-              <thead>
-                <tr className="border-b border-slate-800">
-                  {tableKeys.map((key) => (
-                    <th
-                      key={key}
-                      onClick={() => handleSort(key)}
-                      className="px-4 py-3 text-left text-xs font-medium text-slate-400
-                                 uppercase tracking-wider cursor-pointer select-none
-                                 hover:text-white transition-colors whitespace-nowrap"
-                    >
-                      {headings[key]}
-                      <SortIcon field={sortFieldMap[key]} sortBy={sortBy} sortOrder={sortOrder} />
-                    </th>
-                  ))}
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-slate-800">
-                {users.length === 0 && !tableLoading ? (
-                  <tr>
-                    <td colSpan={tableKeys.length + 1}
-                      className="px-4 py-12 text-center text-slate-500 text-sm">
-                      No users found
-                    </td>
-                  </tr>
-                ) : (
-                  users.map((user) => (
-                    <tr key={user.id}
-                      className="hover:bg-slate-800/40 transition-colors duration-150">
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="font-medium text-white">{user.name || "—"}</span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-400">
-                        {user.email || "—"}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <RoleBadge role={user.role} />
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <StatusBadge verified={user.isEmailVerified} />
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-slate-400 text-xs">
-                        {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <button
-                          onClick={() => { setSelectedUser(user); setShowRoleModal(true); }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium
-                                     bg-amber-500/15 text-amber-400 border border-amber-500/30
-                                     hover:bg-amber-500/25 transition-colors duration-150"
-                        >
-                          Assign Role
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between
-                            px-4 py-3 sm:px-6 border-t border-slate-800">
-              <p className="text-xs text-slate-500">
-                Total: <span className="text-white font-medium">{totalCount}</span> users
-              </p>
-              <div className="pagination">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={(page) => setCurrentPage(page)}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <AdminTable
+        title="All Users"
+        totalCount={totalCount}
+        searchValue={searchInput}
+        onSearchChange={handleSearch}
+        searchPlaceholder="Search users..."
+        tableKeys={tableKeys}
+        headings={headings}
+        sortFieldMap={sortFieldMap}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={handleSort}
+        tableLoading={tableLoading}
+        rows={users}
+        renderRow={renderRow}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+        emptyText="No users found"
+      />
 
       {showRoleModal && selectedUser && (
         <AssignRole

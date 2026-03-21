@@ -55,15 +55,15 @@ export default function AdminTable({
     emptyText = "No records found",
 }) {
     return (
-        <div className="w-full space-y-2">
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 shadow-lg overflow-hidden">
+        <div className="w-full">
+            <div className="rounded-2xl border border-indigo-900/40 bg-[linear-gradient(160deg,#141834_0%,#131730_52%,#111427_100%)] shadow-[0_14px_34px_rgba(5,8,24,0.65)] overflow-hidden">
 
                 {/* ── Card Header ── */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between
-                        px-4 py-4 sm:px-6 border-b border-slate-800">
+                        px-4 py-3 sm:px-5 border-b border-indigo-900/30 bg-slate-950/35">
                     <div>
-                        <h2 className="text-base font-semibold text-white">{title}</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">{totalCount} total records</p>
+                        <h2 className="text-base font-semibold text-slate-100">{title}</h2>
+                        <p className="text-xs text-slate-300/70 mt-0.5">{totalCount} total records</p>
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -72,10 +72,10 @@ export default function AdminTable({
                             placeholder={searchPlaceholder}
                             value={searchValue}
                             onChange={onSearchChange}
-                            className="w-full sm:w-64 px-3 py-2 rounded-lg text-sm
-                         bg-slate-800 border border-slate-700 text-white
-                         placeholder:text-slate-500
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                            className="w-full sm:w-64 px-3 py-2 rounded-xl text-sm
+                         bg-slate-950/70 border border-slate-700/70 text-white
+                         placeholder:text-slate-300/40
+                         focus:outline-none focus:ring-2 focus:ring-slate-500/40 focus:border-slate-500/70
                          transition-colors duration-150"
                         />
                     </div>
@@ -104,16 +104,16 @@ export default function AdminTable({
                         transition: "opacity 0.25s ease",
                     }}
                 >
-                    <table className="w-full text-sm" style={{ minWidth: "640px" }}>
+                    <table className="w-full text-[20px] table-auto" style={{ minWidth: "760px" }}>
                         <thead>
-                            <tr className="border-b border-slate-800">
+                            <tr className="border-b border-indigo-900/30 bg-slate-950/45">
                                 {tableKeys.map((key) => (
                                     <th
                                         key={key}
                                         onClick={() => onSort?.(key)}
-                                        className="px-4 py-3 text-left text-xs font-medium text-slate-400
+                                        className="px-4 py-3 text-left text-[20px] font-semibold text-slate-200/80
                                uppercase tracking-wider cursor-pointer select-none
-                               hover:text-white transition-colors whitespace-nowrap"
+                               hover:text-white transition-colors whitespace-nowrap border-r border-indigo-900/30 last:border-r-0"
                                     >
                                         {headings[key] || key}
                                         <SortIcon
@@ -123,13 +123,13 @@ export default function AdminTable({
                                         />
                                     </th>
                                 ))}
-                                <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider sticky right-0 bg-slate-900 z-10">
+                                <th className="px-4 py-3 text-left text-[20px] font-semibold text-slate-200/80 uppercase tracking-wider sticky right-0 bg-[#1b1f4a] z-10">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
 
-                        <tbody className="divide-y divide-slate-800">
+                        <tbody className="divide-y divide-indigo-900/25">
                             {rows.length === 0 && !tableLoading ? (
                                 <tr>
                                     <td
@@ -149,7 +149,7 @@ export default function AdminTable({
                 {/* ── Pagination ── */}
                 {totalPages > 1 && (
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between
-                          px-4 py-3 sm:px-6 border-t border-slate-800">
+                          px-4 py-2.5 sm:px-5 border-t border-slate-800">
                         <p className="text-xs text-slate-500">
                             Total: <span className="text-white font-medium">{totalCount}</span> records
                         </p>

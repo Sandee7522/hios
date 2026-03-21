@@ -16,11 +16,11 @@ export default function AdminLayout({ children }) {
         */}
         <main
           className="flex-1 min-w-0 w-full
-                     ml-0 lg:ml-[260px]
-                     pt-20 px-4 pb-6
-                     sm:px-5
-                     md:px-6
-                     lg:px-8 lg:pt-20
+                     ml-0 lg:ml-[290px]
+                     pt-2 px-2 pb-4
+                     sm:px-3
+                     md:px-4
+                     lg:px-5 lg:pt-2
                      transition-all duration-300"
         >
           {children}

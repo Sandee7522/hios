@@ -8,16 +8,18 @@ import ErrorBox from "@/components/common/ErrorBox";
 import PageHeader from "@/components/common/PageHeader";
 import AdminTable from "@/components/common/AdminTable";
 import { RiDeleteBin6Line, RiEdit2Line } from "react-icons/ri";
+import { IoImageOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import CreateCategoryModal from "../commonModals/CreateAndUpdateCategory";
 import DeleteCtgModal from "../commonModals/DeleteCategory";
 
-const TABLE_KEYS = ["name", "slug", "description", "isActive", "created_at", "updated_at"];
+const TABLE_KEYS = ["name", "slug", "description", "icon", "isActive", "created_at", "updated_at"];
 
 const HEADINGS = {
   name: "Name",
   slug: "Slug",
   description: "Description",
+  icon: "Icon",
   isActive: "Active",
   created_at: "Created",
   updated_at: "Updated",
@@ -39,6 +41,7 @@ export default function AllCategory() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [previewIcon, setPreviewIcon] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -126,6 +129,20 @@ export default function AllCategory() {
       <td className="px-4 py-3 text-slate-400">{cat.slug || "—"}</td>
       <td className="px-4 py-3 text-slate-400 max-w-[200px] truncate">{cat.description || "—"}</td>
       <td className="px-4 py-3">
+        {cat.icon ? (
+          <button
+            type="button"
+            onClick={() => setPreviewIcon(cat.icon)}
+            className="w-14 h-14 inline-flex items-center justify-center rounded-lg border border-indigo-900/60 bg-indigo-900/25 text-indigo-200 hover:bg-indigo-900/40 transition cursor-zoom-in shadow-[0_8px_20px_rgba(30,41,59,0.45)] hover:shadow-[0_10px_24px_rgba(30,41,59,0.6)]"
+            title="Preview icon"
+          >
+            <IoImageOutline size={28} />
+          </button>
+        ) : (
+          <span className="text-slate-500">—</span>
+        )}
+      </td>
+      <td className="px-4 py-3">
         <span style={{
           padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: 500,
           background: cat.isActive ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
@@ -138,11 +155,11 @@ export default function AllCategory() {
       <td className="px-4 py-3 text-slate-500">{cat.updated_at ? new Date(cat.updated_at).toLocaleDateString() : "—"}</td>
       <td className="px-4 py-3 sticky right-0 bg-slate-900 z-10">
         <div className="flex items-center gap-2">
-          <button onClick={() => { setSelectedCategory(cat); setShowUpdateModal(true); }} className="p-1.5 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition">
-            <RiEdit2Line size={16} color="#3b82f6" />
+          <button onClick={() => { setSelectedCategory(cat); setShowUpdateModal(true); }} className="p-2 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition shadow-[0_6px_16px_rgba(59,130,246,0.25)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.35)]">
+            <RiEdit2Line size={20} color="#3b82f6" />
           </button>
-          <button onClick={() => { setSelectedCategory(cat); setShowDeleteModal(true); }} className="p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 transition">
-            <RiDeleteBin6Line size={16} color="#ef4444" />
+          <button onClick={() => { setSelectedCategory(cat); setShowDeleteModal(true); }} className="p-2 rounded-md bg-red-500/10 hover:bg-red-500/20 transition shadow-[0_6px_16px_rgba(239,68,68,0.25)] hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]">
+            <RiDeleteBin6Line size={20} color="#ef4444" />
           </button>
         </div>
       </td>
@@ -196,6 +213,31 @@ export default function AllCategory() {
           onClose={() => { setShowDeleteModal(false); setSelectedCategory(null); }}
           onSuccess={(msg) => { setSuccessMessage(msg); setShowDeleteModal(false); setSelectedCategory(null); fetchCategories(); }}
         />
+      )}
+
+      {previewIcon && (
+        <div
+          className="fixed inset-0 z-[1300] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setPreviewIcon("")}
+        >
+          <div
+            className="relative w-[90vw] h-[90vw] sm:w-[70vw] sm:h-[70vw] lg:w-[50vw] lg:h-[50vh] max-w-[900px] max-h-[700px] rounded-xl border border-slate-700 bg-slate-950 p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewIcon("")}
+              className="absolute top-2 right-2 z-10 px-2 py-1 text-xs rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Close
+            </button>
+            <img
+              src={previewIcon}
+              alt="Category icon preview"
+              className="w-full h-full object-contain rounded-lg"
+            />
+          </div>
+        </div>
       )}
     </>
   );

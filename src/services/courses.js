@@ -9,7 +9,7 @@ export default class CourseServises {
 
   async createCategory(payload) {
     try {
-      const { name, slug, description, icon, isActive } = payload;
+      const { name, slug, description, icon, iconId, isActive } = payload;
       const exists = await Categories.findOne({ slug });
       if (exists) {
         return {
@@ -23,6 +23,7 @@ export default class CourseServises {
         slug,
         description,
         icon,
+        iconId,
         isActive,
       });
 
@@ -142,7 +143,7 @@ export default class CourseServises {
   // ================= UPDATE CATEGORY BY ID ================
   async updateCategoryById(payload) {
     try {
-      const { categoryId, name, slug, description, icon, isActive } = payload;
+      const { categoryId, name, slug, description, icon, iconId, isActive } = payload;
 
       const category = await Categories.findByIdAndUpdate(
         categoryId,
@@ -151,6 +152,7 @@ export default class CourseServises {
           slug,
           description,
           icon,
+          iconId,
           isActive,
         },
         { new: true },

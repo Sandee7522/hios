@@ -65,6 +65,7 @@ export default function AllCourses() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -184,22 +185,29 @@ export default function AllCourses() {
       <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{course.title || "—"}</td>
       <td className="px-4 py-3 text-slate-400 text-xs">{course.slug || "—"}</td>
       <td className="px-4 py-3 text-slate-400 max-w-[180px] truncate">{course.description || "—"}</td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 bg-indigo-900/25">
         {course.thumbnail ? (
-          <img src={course.thumbnail} alt="" className="w-12 h-8 rounded object-cover border border-slate-700" />
+          <button
+            type="button"
+            onClick={() => setPreviewImage(course.thumbnail)}
+            className="cursor-zoom-in rounded-md shadow-[0_8px_20px_rgba(30,41,59,0.45)] hover:shadow-[0_10px_24px_rgba(30,41,59,0.6)] transition"
+            title="Preview thumbnail"
+          >
+            <img src={course.thumbnail} alt="" className="w-12 h-8 rounded object-cover border border-indigo-900/60" />
+          </button>
         ) : (
           <span className="text-slate-600">—</span>
         )}
       </td>
-      <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{course.instructorId?.name || "—"}</td>
+      <td className="px-4 py-3 text-slate-200 whitespace-nowrap bg-slate-800/45 font-medium">{course.instructorId?.name || "—"}</td>
       <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{course.categoryId?.name || "—"}</td>
       <td className="px-4 py-3 text-slate-400 capitalize">{course.level || "—"}</td>
       <td className="px-4 py-3 text-slate-400">{course.courseLanguage || "—"}</td>
-      <td className="px-4 py-3 text-slate-300 whitespace-nowrap">₹{course.price ?? 0}</td>
-      <td className="px-4 py-3 text-slate-400">{course.discount ?? 0}</td>
-      <td className="px-4 py-3 text-slate-300 whitespace-nowrap">₹{course.totalFee ?? 0}</td>
+      <td className="px-4 py-3 text-emerald-300 whitespace-nowrap bg-emerald-900/25 font-semibold">₹{course.price ?? 0}</td>
+      <td className="px-4 py-3 text-amber-300 bg-amber-900/25 font-semibold">{course.discount ?? 0}</td>
+      <td className="px-4 py-3 text-cyan-300 whitespace-nowrap bg-cyan-900/25 font-semibold">₹{course.totalFee ?? 0}</td>
       <td className="px-4 py-3 text-slate-400">{course.currency || "INR"}</td>
-      <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+      <td className="px-4 py-3 text-violet-200 whitespace-nowrap bg-violet-900/25 font-medium">
         {course.duration?.hours || course.duration?.minutes
           ? `${course.duration.hours || 0}h ${course.duration.minutes || 0}m`
           : "—"}
@@ -212,11 +220,11 @@ export default function AllCourses() {
       <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{course.created_at ? new Date(course.created_at).toLocaleDateString() : "—"}</td>
       <td className="px-4 py-3 sticky right-0 bg-slate-900 z-10">
         <div className="flex items-center gap-2">
-          <button onClick={() => { setSelectedCourse(course); setShowUpdateModal(true); }} className="p-1.5 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition">
-            <RiEdit2Line size={16} color="#3b82f6" />
+          <button onClick={() => { setSelectedCourse(course); setShowUpdateModal(true); }} className="p-2 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition shadow-[0_6px_16px_rgba(59,130,246,0.25)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.35)]">
+            <RiEdit2Line size={20} color="#3b82f6" />
           </button>
-          <button onClick={() => { setSelectedCourse(course); setShowDeleteModal(true); }} className="p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 transition">
-            <RiDeleteBin6Line size={16} color="#ef4444" />
+          <button onClick={() => { setSelectedCourse(course); setShowDeleteModal(true); }} className="p-2 rounded-md bg-red-500/10 hover:bg-red-500/20 transition shadow-[0_6px_16px_rgba(239,68,68,0.25)] hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]">
+            <RiDeleteBin6Line size={20} color="#ef4444" />
           </button>
         </div>
       </td>
@@ -270,6 +278,31 @@ export default function AllCourses() {
           onClose={() => { setShowDeleteModal(false); setSelectedCourse(null); }}
           onSuccess={(msg) => { setSuccessMessage(msg); setShowDeleteModal(false); setSelectedCourse(null); fetchCourses(); }}
         />
+      )}
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[1200] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setPreviewImage("")}
+        >
+          <div
+            className="relative w-[90vw] h-[90vw] sm:w-[70vw] sm:h-[70vw] lg:w-[50vw] lg:h-[50vh] max-w-[900px] max-h-[700px] rounded-xl border border-slate-700 bg-slate-950 p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage("")}
+              className="absolute top-2 right-2 z-10 px-2 py-1 text-xs rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Close
+            </button>
+            <img
+              src={previewImage}
+              alt="Course thumbnail preview"
+              className="w-full h-full object-contain rounded-lg"
+            />
+          </div>
+        </div>
       )}
     </>
   );

@@ -18,12 +18,13 @@ const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
     name: "",
     slug: "",
     description: "",
-    icon: "",
     isActive: true,
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [iconFile, setIconFile] = useState(null);
+  const [iconPreview, setIconPreview] = useState("");
 
   useEffect(() => {
     if (initialData?._id) {
@@ -31,9 +32,9 @@ const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
         name: initialData.name || "",
         slug: initialData.slug || "",
         description: initialData.description || "",
-        icon: initialData.icon || "",
         isActive: initialData.isActive ?? true,
       });
+      setIconPreview(initialData.icon || "");
     }
   }, [initialData]);
 
@@ -53,16 +54,34 @@ const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
 
       if (isEdit) {
         // Update — POST to updateCategoryById with categoryId in body
+        const fd = new FormData();
+        fd.append("categoryId", initialData._id);
+        fd.append("name", formData.name);
+        fd.append("slug", formData.slug);
+        fd.append("description", formData.description || "");
+        fd.append("icon", initialData?.icon || "");
+        if (initialData?.iconId) fd.append("oldIconPublicId", initialData.iconId);
+        if (initialData?.iconId) fd.append("iconId", initialData.iconId);
+        fd.append("isActive", String(formData.isActive));
+        if (iconFile) fd.append("iconFile", iconFile);
+
         await requestWithAuth(UPDATE_CATEGORY_ADMIN, {
           method: "POST",
-          body: { categoryId: initialData._id, ...formData },
+          body: fd,
           allowedRoles: ["admin"],
         });
       } else {
         // Create — POST to createCategory
+        const fd = new FormData();
+        fd.append("name", formData.name);
+        fd.append("slug", formData.slug);
+        fd.append("description", formData.description || "");
+        fd.append("isActive", String(formData.isActive));
+        if (iconFile) fd.append("iconFile", iconFile);
+
         await requestWithAuth(CREATE_CATEGORY_ADMIN, {
           method: "POST",
-          body: formData,
+          body: fd,
           allowedRoles: ["admin"],
         });
       }
@@ -131,13 +150,41 @@ const CreateCategoryModal = ({ onClose, onSuccess, initialData }) => {
           </div>
 
           <div className="form-group">
-            <label>Icon URL</label>
-            <CustomInput
-              value={formData.icon}
-              onChange={(v) => handleChange("icon", v)}
-              placeholder="https://icon.png"
+            <label>Upload Icon</label>
+            <input
+              type="file"
+              accept="image/*"
               disabled={loading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setIconFile(file);
+                const preview = URL.createObjectURL(file);
+                setIconPreview(preview);
+              }}
+              style={{
+                padding: "8px",
+                borderRadius: "8px",
+                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.04)",
+                color: "#e2e8f0",
+                fontSize: "13px",
+              }}
             />
+            {iconPreview && (
+              <img
+                src={iconPreview}
+                alt="icon-preview"
+                style={{
+                  marginTop: "8px",
+                  width: "60px",
+                  height: "60px",
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              />
+            )}
           </div>
 
           <div className="form-group checkbox">

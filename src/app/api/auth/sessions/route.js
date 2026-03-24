@@ -1,5 +1,5 @@
 import connectDB from "@/config/database";
-import AuthService from "@/services/AuthService";
+import AuthService from "@/services/auth";
 import { success, validationError, serverError } from "@/utils/apiResponse";
 
 export async function GET(req) {

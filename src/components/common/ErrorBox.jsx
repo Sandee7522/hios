@@ -25,8 +25,9 @@ export default function ErrorBox({ message, duration = 4000, className = "" }) {
       role="alert"
       className={`transition-all duration-500 ease-out transform 
       ${visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3"}
-      flex justify-between items-start rounded-xl border border-red-500/30 -mt-14
-      bg-red-500/10 px-4 py-3 text-sm text-red-400 ${className}`}
+      fixed top-20 right-4 z-[3000] w-[min(92vw,460px)]
+      flex justify-between items-start rounded-xl border border-red-500/30
+      bg-red-500/10 px-4 py-3 text-sm text-red-400 shadow-[0_12px_28px_rgba(239,68,68,0.25)] ${className}`}
     >
       <div className="flex items-start gap-3">
         <MdErrorOutline size={20} className="mt-0.5" />

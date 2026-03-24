@@ -1,4 +1,5 @@
 import {
+  Enrollments,
   Sessions,
   UserDetails,
   UserRoles,
@@ -391,11 +392,37 @@ export default class AuthService {
         .sort({ lastActivity: -1 })
         .select("-token");
 
+      const isPrivateIp = (ip) =>
+        /^(10\.|127\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.)/.test(ip || "");
+      const uniqueIps = [...new Set(sessions.map((s) => s.ipAddress).filter(Boolean))];
+      const suspiciousIpChange = uniqueIps.length > 1;
+
+      const enrichedSessions = sessions.map((session) => {
+        const ip = session.ipAddress || "Unknown";
+        const browser = session.deviceInfo?.browser || "Unknown Browser";
+        const os = session.deviceInfo?.os || "Unknown OS";
+        const device = session.deviceInfo?.device || "Unknown Device";
+        const locationLabel =
+          ip === "Unknown"
+            ? "Unknown location"
+            : isPrivateIp(ip)
+              ? "Private network"
+              : "Public network";
+
+        return {
+          ...session.toObject(),
+          deviceSummary: `${browser} • ${os} • ${device}`,
+          locationLabel,
+        };
+      });
+
       return {
         success: true,
         data: {
-          sessions: sessions,
-          total: sessions.length,
+          sessions: enrichedSessions,
+          total: enrichedSessions.length,
+          suspiciousIpChange,
+          uniqueIpCount: uniqueIps.length,
         },
       };
     } catch (error) {
@@ -468,10 +495,52 @@ export default class AuthService {
       // 🔢 Total Count
       const total = await Users.countDocuments(filterQuery);
 
+      // 📚 Course tracking for users on current page
+      const userIds = users.map((u) => u._id);
+      const enrollments = await Enrollments.find({ userId: { $in: userIds } })
+        .populate("courseId", "title slug")
+        .select(
+          "userId courseId progress paymentStatus totalPaid remainingAmount completedAt certificateIssued",
+        )
+        .lean();
+
+      const enrollmentMap = new Map();
+      for (const e of enrollments) {
+        const key = String(e.userId);
+        if (!enrollmentMap.has(key)) enrollmentMap.set(key, []);
+        enrollmentMap.get(key).push(e);
+      }
+
       return {
         success: true,
         data: {
-          users: users.map((user) => this.sanitizeUser(user)),
+          users: users.map((user) => {
+            const cleanUser = this.sanitizeUser(user);
+            const userEnrollments = enrollmentMap.get(String(user._id)) || [];
+
+            const courses = userEnrollments.map((en) => ({
+              enrollmentId: en._id,
+              courseId: en.courseId?._id || null,
+              courseTitle: en.courseId?.title || "Unknown Course",
+              courseSlug: en.courseId?.slug || "",
+              progress: en.progress ?? 0,
+              paymentStatus: en.paymentStatus || "pending",
+              totalPaid: en.totalPaid ?? 0,
+              remainingAmount: en.remainingAmount ?? 0,
+              completed: Boolean(en.completedAt) || (en.progress ?? 0) >= 100,
+              certificateIssued: Boolean(en.certificateIssued),
+            }));
+
+            return {
+              ...cleanUser,
+              courseTracking: {
+                totalCourses: courses.length,
+                completedCourses: courses.filter((c) => c.completed).length,
+                inProgressCourses: courses.filter((c) => !c.completed).length,
+                courses,
+              },
+            };
+          }),
           pagination: {
             total,
             page,

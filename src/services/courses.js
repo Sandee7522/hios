@@ -1,4 +1,4 @@
-import { Categories, Courses, Lessons, Modules } from "@/models/schemaModal";
+import { Categories, Courses, CourseDetails, Lessons, Modules } from "@/models/schemaModal";
 import mongoose from "mongoose";
 import slugify from "slugify";
 
@@ -1013,4 +1013,108 @@ export default class CourseServises {
   //     throw error;
   //   }
   // }
+
+  //   ?*************************                       *********************************
+  //                                COURSE DETAILS SERVICES
+  //   ?*************************                       *********************************
+
+  // ================= CREATE OR UPDATE COURSE DETAILS =================
+  async createOrUpdateCourseDetails(payload) {
+    try {
+      const { courseId, instructorId, ...data } = payload;
+
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        return { success: false, error: "Invalid courseId" };
+      }
+
+      // Check course exists
+      const course = await Courses.findById(courseId);
+      if (!course) {
+        return { success: false, error: "Course not found" };
+      }
+
+      const existing = await CourseDetails.findOne({ courseId });
+
+      if (existing) {
+        // Update
+        const updated = await CourseDetails.findOneAndUpdate(
+          { courseId },
+          { ...data, updated_at: Date.now() },
+          { new: true, runValidators: true },
+        )
+          .populate("courseId", "title slug thumbnail")
+          .populate("instructorId", "name email")
+          .lean();
+
+        return {
+          success: true,
+          message: "Course details updated successfully",
+          data: updated,
+        };
+      }
+
+      // Create
+      const details = await CourseDetails.create({
+        courseId,
+        instructorId: instructorId || course.instructorId,
+        ...data,
+      });
+
+      const populated = await CourseDetails.findById(details._id)
+        .populate("courseId", "title slug thumbnail")
+        .populate("instructorId", "name email")
+        .lean();
+
+      return {
+        success: true,
+        message: "Course details created successfully",
+        data: populated,
+      };
+    } catch (error) {
+      console.error("createOrUpdateCourseDetails error:", error);
+      return { success: false, error: error.message || "Failed to save course details" };
+    }
+  }
+
+  // ================= GET COURSE DETAILS BY COURSE ID =================
+  async getCourseDetailsByCourseId(courseId) {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        return { success: false, error: "Invalid courseId" };
+      }
+
+      const details = await CourseDetails.findOne({ courseId })
+        .populate("courseId", "title slug thumbnail description price totalFee level")
+        .populate("instructorId", "name email")
+        .lean();
+
+      if (!details) {
+        return { success: false, error: "Course details not found" };
+      }
+
+      return { success: true, data: details };
+    } catch (error) {
+      console.error("getCourseDetailsByCourseId error:", error);
+      return { success: false, error: "Failed to fetch course details" };
+    }
+  }
+
+  // ================= DELETE COURSE DETAILS =================
+  async deleteCourseDetails(courseId) {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        return { success: false, error: "Invalid courseId" };
+      }
+
+      const deleted = await CourseDetails.findOneAndDelete({ courseId });
+      if (!deleted) {
+        return { success: false, error: "Course details not found" };
+      }
+
+      return { success: true, message: "Course details deleted successfully" };
+    } catch (error) {
+      console.error("deleteCourseDetails error:", error);
+      return { success: false, error: "Failed to delete course details" };
+    }
+  }
 }

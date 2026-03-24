@@ -1,41 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# HIOS - Learning Management System
+
+A full-stack LMS built with **Next.js (App Router)**, **MongoDB**, **Razorpay**, and **Cloudinary**.
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Environment Variables
+
+Create a `.env` file in the project root and add the following:
+
+```env
+# ─── MongoDB ───
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>
+
+# ─── JWT ───
+JWT_ACCESS_SECRET=your_access_secret_here
+JWT_REFRESH_SECRET=your_refresh_secret_here
+JWT_ACCESS_EXPIRES_IN=15d
+JWT_REFRESH_EXPIRES_IN=7d
+
+# ─── Cloudinary (Image/Video Uploads) ───
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# ─── Razorpay (Payments) ───
+RAZZER_PAY_KEY_ID=your_razorpay_key_id
+RAZZER_PAY_KEY_SECRET=your_razorpay_key_secret
+
+# ─── SMTP (Email) ───
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+SMTP_FROM=Your App Name <your_email@gmail.com>
+SMTP_VERIFY_EMAIL=admin_verify_email@gmail.com
+
+# ─── Public (Accessible in Browser) ───
+NEXT_PUBLIC_API_URL=/api
+NEXT_PUBLIC_RAZORPAY_KEY_ID=your_razorpay_key_id
+```
+
+### 3. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+| Layer       | Technology                  |
+|-------------|-----------------------------|
+| Framework   | Next.js 14 (App Router)     |
+| Database    | MongoDB + Mongoose          |
+| Auth        | JWT (Access + Refresh)      |
+| Payments    | Razorpay                    |
+| Uploads     | Cloudinary                  |
+| Styling     | Tailwind CSS + CSS Modules  |
+| Animations  | Framer Motion               |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── api/              # API route handlers
+│   │   ├── auth/         # Register, OTP Verify, Login, Logout, Profile, Force Logout
+│   │   ├── payment/      # Razorpay order, verify, failed
+│   │   ├── enrollment/   # User course enrollment
+│   │   ├── admin/        # Admin dashboard, categories, courses, modules, lessons
+│   │   └── instructor/   # Instructor course & student management
+│   └── dashboard/        # Dashboard pages (admin, instructor, student)
+├── components/           # Reusable UI components
+│   ├── common/           # ConfirmModal, AdminTable, Pagination, etc.
+│   └── landing/          # Landing page components
+├── models/               # Mongoose schemas (all in schemaModal.js)
+├── services/             # Business logic (auth, payment, upload, etc.)
+├── utils/                # JWT, password hashing, API response helpers
+├── config/               # Database connection
+└── middleware/            # Auth middleware
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Useful Commands
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-
+```bash
+# Create a new folder with file
 mkdir -p folderName && touch folderName/fileName
-
-
+```

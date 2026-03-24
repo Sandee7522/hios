@@ -168,19 +168,32 @@ CourseSchema.pre('save', function () {
   this.updated_at = Date.now();
 });
 
-const CourseDetailsSchema = new mongoose.Schema({
-  courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses', required: true, unique: true },
-  instructorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-  detailedDescription: { type: String },
-  courseOutline: { type: String },
-  teacherImg: { type: String },
-  teacherName: { type: String },
-  teacherDesignation: { type: String },
-  demoVideo: { type: String },
+const CourseDetailsSchema = new mongoose.Schema(
+  {
+    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses', required: true, unique: true },
+    instructorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+    detailedDescription: { type: String },
+    courseOutline: { type: String },
+    teacherImg: { type: String },
+    teacherImgId: { type: String },
+    teacherName: { type: String },
+    teacherDesignation: { type: String },
+    teacherBio: { type: String },
+    demoVideo: { type: String },
+    syllabus: [{ title: { type: String }, description: { type: String } }],
+    faqs: [{ question: { type: String }, answer: { type: String } }],
+    targetAudience: [{ type: String }],
+    prerequisites: [{ type: String }],
+    certificateEnabled: { type: Boolean, default: false },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+  },
+  { collection: 'course_details' }
+);
 
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
-})
+CourseDetailsSchema.pre('save', function () {
+  this.updated_at = Date.now();
+});
 
 /* =====================  MODULE SCHEMA  ===================== */
 const ModuleSchema = new mongoose.Schema(
@@ -694,6 +707,47 @@ ApiThrottlingSchema.pre('save', function () {
   this.updated_at = Date.now();
 });
 
+/* =====================  COUPON SCHEMA  ===================== */
+const CouponSchema = new mongoose.Schema(
+  {
+    code: { type: String, required: true, unique: true, uppercase: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    discountType: { type: String, enum: ['percentage', 'flat'], default: 'percentage' },
+    discountValue: { type: Number, required: true, min: 0 },
+    maxDiscount: { type: Number },
+    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Courses' },
+    isUsed: { type: Boolean, default: false },
+    usedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+    usedAt: { type: Date },
+    expiresAt: { type: Date, required: true },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
+  },
+  { collection: 'coupons' }
+);
+
+CouponSchema.pre('save', function () {
+  this.updated_at = Date.now();
+});
+
+/* =====================  USER DELETION LOG SCHEMA  ===================== */
+const UserDeletionLogSchema = new mongoose.Schema(
+  {
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+    deletedByName: { type: String, required: true },
+    deletedByEmail: { type: String, required: true },
+    deletedUserId: { type: String, required: true },
+    deletedUserName: { type: String, required: true },
+    deletedUserEmail: { type: String, required: true },
+    deletedUserRole: { type: String },
+    reason: { type: String, default: '' },
+    deletedCollections: { type: mongoose.Schema.Types.Mixed },
+    created_at: { type: Date, default: Date.now },
+  },
+  { collection: 'user_deletion_logs' }
+);
+
 /* =====================  EXPORT MODELS  ===================== */
 export const Permissions = mongoose.models.Permissions || mongoose.model("Permissions", PermissionSchema);
 export const UserRoles = mongoose.models.UserRoles || mongoose.model("UserRoles", UserRolesSchema);
@@ -702,6 +756,7 @@ export const UserDetails = mongoose.models.UserDetails || mongoose.model("UserDe
 export const Sessions = mongoose.models.Sessions || mongoose.model('Sessions', SessionSchema);
 export const Categories = mongoose.models.Categories || mongoose.model('Categories', CategorySchema);
 export const Courses = mongoose.models.Courses || mongoose.model('Courses', CourseSchema);
+export const CourseDetails = mongoose.models.CourseDetails || mongoose.model('CourseDetails', CourseDetailsSchema);
 export const Modules = mongoose.models.Modules || mongoose.model('Modules', ModuleSchema);
 export const Lessons = mongoose.models.Lessons || mongoose.model('Lessons', LessonSchema);
 export const AccessRules = mongoose.models.AccessRules || mongoose.model('AccessRules', AccessRuleSchema);
@@ -724,5 +779,7 @@ export const AIRecommendations = mongoose.models.AIRecommendations || mongoose.m
 export const ChatMessages = mongoose.models.ChatMessages || mongoose.model('ChatMessages', ChatMessageSchema);
 export const Uploads = mongoose.models.Uploads || mongoose.model('Uploads', UploadSchema);
 export const ApiThrottling = mongoose.models.ApiThrottling || mongoose.model('ApiThrottling', ApiThrottlingSchema);
+export const Coupons = mongoose.models.Coupons || mongoose.model('Coupons', CouponSchema);
+export const UserDeletionLogs = mongoose.models.UserDeletionLogs || mongoose.model('UserDeletionLogs', UserDeletionLogSchema);
 
 

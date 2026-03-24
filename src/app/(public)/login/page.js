@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { setAuthData } from '../../dashboard/utils/auth';
-import { LOGIN, REGISTER } from '../../dashboard/utils/api';
+import { LOGIN, REGISTER, VERIFY_OTP, RESEND_OTP, VERIFY_LOGIN_OTP, RESEND_LOGIN_OTP } from '../../dashboard/utils/api';
 import Link from 'next/link';
 
 /* ============================================================
@@ -38,6 +38,24 @@ export default function AuthPage() {
   const [regError, setRegError] = useState('');
   const [showRegPw, setShowRegPw] = useState(false);
 
+  /* ---- OTP state ---- */
+  const [showOtpPanel, setShowOtpPanel] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
+
+  /* ---- Admin Login OTP state ---- */
+  const [showAdminOtp, setShowAdminOtp] = useState(false);
+  const [adminOtpEmail, setAdminOtpEmail] = useState('');
+  const [adminOtpValues, setAdminOtpValues] = useState(['', '', '', '', '', '']);
+  const [adminOtpLoading, setAdminOtpLoading] = useState(false);
+  const [adminOtpError, setAdminOtpError] = useState('');
+  const [adminResendLoading, setAdminResendLoading] = useState(false);
+  const [adminResendMsg, setAdminResendMsg] = useState('');
+
   /* ---- Toggle ---- */
   const toggle = () => {
     setLoginError('');
@@ -59,6 +77,16 @@ export default function AuthPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Invalid credentials');
 
+      // Admin requires OTP
+      if (data.data?.requireOtp) {
+        setAdminOtpEmail(loginEmail);
+        setShowAdminOtp(true);
+        setAdminOtpValues(['', '', '', '', '', '']);
+        setAdminOtpError('');
+        setLoginLoading(false);
+        return;
+      }
+
       const token = data.data?.accessToken;
       const role = data.data?.user?.role?.user_type;
       const user = {
@@ -76,7 +104,60 @@ export default function AuthPage() {
     }
   }, [loginEmail, loginPassword, router]);
 
-  /* ============ SIGN UP ============ */
+  /* ============ VERIFY ADMIN LOGIN OTP ============ */
+  const handleAdminOtpVerify = useCallback(async (e) => {
+    e.preventDefault();
+    const otp = adminOtpValues.join('');
+    if (otp.length !== 6) { setAdminOtpError('Please enter all 6 digits'); return; }
+
+    setAdminOtpLoading(true);
+    setAdminOtpError('');
+    try {
+      const res = await fetch(VERIFY_LOGIN_OTP, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminOtpEmail, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Verification failed');
+
+      const payload = data.data;
+      const token = payload?.accessToken;
+      const user = payload?.user;
+      const role = user?.role?.user_type || 'admin';
+      if (!token) throw new Error('Verification failed');
+
+      setAuthData(token, role, { _id: user?.id, id: user?.id, name: user?.name, email: user?.email });
+      setTimeout(() => router.push('/dashboard'), 100);
+    } catch (err) {
+      setAdminOtpError(err.message);
+      setAdminOtpLoading(false);
+    }
+  }, [adminOtpValues, adminOtpEmail, router]);
+
+  /* ============ RESEND ADMIN LOGIN OTP ============ */
+  const handleAdminResendOtp = useCallback(async () => {
+    setAdminResendLoading(true);
+    setAdminResendMsg('');
+    setAdminOtpError('');
+    try {
+      const res = await fetch(RESEND_LOGIN_OTP, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminOtpEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to resend');
+      setAdminResendMsg('New OTP sent to verification email!');
+      setAdminOtpValues(['', '', '', '', '', '']);
+    } catch (err) {
+      setAdminOtpError(err.message);
+    } finally {
+      setAdminResendLoading(false);
+    }
+  }, [adminOtpEmail]);
+
+  /* ============ SIGN UP — sends OTP ============ */
   const handleRegister = useCallback(async (e) => {
     e.preventDefault();
     setRegLoading(true);
@@ -90,19 +171,70 @@ export default function AuthPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-      const payload = data.data?.data || data.data;
-      if (!payload?.accessToken) throw new Error('Registration successful! Please sign in.');
+      // Show OTP panel
+      setOtpEmail(regEmail);
+      setShowOtpPanel(true);
+      setOtpValues(['', '', '', '', '', '']);
+      setOtpError('');
+    } catch (err) {
+      setRegError(err.message);
+    } finally {
+      setRegLoading(false);
+    }
+  }, [regName, regEmail, regPassword]);
 
-      const token = payload.accessToken;
-      const user = payload.user;
+  /* ============ VERIFY OTP ============ */
+  const handleVerifyOtp = useCallback(async (e) => {
+    e.preventDefault();
+    const otp = otpValues.join('');
+    if (otp.length !== 6) { setOtpError('Please enter all 6 digits'); return; }
+
+    setOtpLoading(true);
+    setOtpError('');
+    try {
+      const res = await fetch(VERIFY_OTP, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Verification failed');
+
+      const payload = data.data;
+      const token = payload?.accessToken;
+      const user = payload?.user;
       const role = user?.role?.user_type || 'user';
+      if (!token) throw new Error('Verification failed');
+
       setAuthData(token, role, { _id: user?.id, id: user?.id, name: user?.name, email: user?.email });
       setTimeout(() => router.push('/dashboard'), 100);
     } catch (err) {
-      setRegError(err.message);
-      setRegLoading(false);
+      setOtpError(err.message);
+      setOtpLoading(false);
     }
-  }, [regName, regEmail, regPassword, router]);
+  }, [otpValues, otpEmail, router]);
+
+  /* ============ RESEND OTP ============ */
+  const handleResendOtp = useCallback(async () => {
+    setResendLoading(true);
+    setResendMsg('');
+    setOtpError('');
+    try {
+      const res = await fetch(RESEND_OTP, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to resend');
+      setResendMsg('New OTP sent to your email!');
+      setOtpValues(['', '', '', '', '', '']);
+    } catch (err) {
+      setOtpError(err.message);
+    } finally {
+      setResendLoading(false);
+    }
+  }, [otpEmail]);
 
   /* ============ SLIDE VARIANTS ============ */
   const slideVariants = {
@@ -174,48 +306,77 @@ export default function AuthPage() {
                 transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="p-8 sm:p-10 lg:p-12 flex flex-col justify-center min-h-[560px]"
               >
-                {/* Mobile logo */}
                 <MobileLogo />
 
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Welcome Back!</h1>
-                <p className="text-slate-500 text-sm mb-7">Sign in to your account</p>
+                <AnimatePresence mode="wait">
+                  {!showAdminOtp ? (
+                    /* ---- Normal Login Form ---- */
+                    <motion.div key="login-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Welcome Back!</h1>
+                      <p className="text-slate-500 text-sm mb-7">Sign in to your account</p>
 
-                {loginError && <ErrorBox message={loginError} />}
+                      {loginError && <ErrorBox message={loginError} />}
 
-                <form onSubmit={handleLogin} className="space-y-5">
-                  <InputField
-                    label="Email Address"
-                    type="email"
-                    value={loginEmail}
-                    onChange={setLoginEmail}
-                    placeholder="you@example.com"
-                  />
-                  <PasswordField
-                    label="Password"
-                    value={loginPassword}
-                    onChange={setLoginPassword}
-                    show={showLoginPw}
-                    toggleShow={() => setShowLoginPw(!showLoginPw)}
-                  />
+                      <form onSubmit={handleLogin} className="space-y-5">
+                        <InputField label="Email Address" type="email" value={loginEmail} onChange={setLoginEmail} placeholder="you@example.com" />
+                        <PasswordField label="Password" value={loginPassword} onChange={setLoginPassword} show={showLoginPw} toggleShow={() => setShowLoginPw(!showLoginPw)} />
 
-                  <div className="flex justify-end">
-                    <Link href="/forgot-password" className="text-xs text-cyan-500/70 hover:text-cyan-400 transition">
-                      Forgot password?
-                    </Link>
-                  </div>
+                        <div className="flex justify-end">
+                          <Link href="/forgot-password" className="text-xs text-cyan-500/70 hover:text-cyan-400 transition">
+                            Forgot password?
+                          </Link>
+                        </div>
 
-                  <SubmitButton loading={loginLoading} text="Sign In" loadingText="Signing in..." />
-                </form>
+                        <SubmitButton loading={loginLoading} text="Sign In" loadingText="Signing in..." />
+                      </form>
 
-                <p className="mt-8 text-center text-sm text-slate-600">
-                  Don't have an account?{' '}
-                  <button onClick={toggle} className="text-cyan-400 hover:text-cyan-300 font-medium transition">
-                    Create Account
-                  </button>
-                </p>
+                      <p className="mt-8 text-center text-sm text-slate-600">
+                        Don't have an account?{' '}
+                        <button onClick={toggle} className="text-cyan-400 hover:text-cyan-300 font-medium transition">Create Account</button>
+                      </p>
+                    </motion.div>
+                  ) : (
+                    /* ---- Admin OTP Verification ---- */
+                    <motion.div key="admin-otp" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Admin Verification</h1>
+                      <p className="text-slate-500 text-sm mb-7">
+                        OTP sent to verification email for <span className="text-red-400">{adminOtpEmail}</span>
+                      </p>
+
+                      {adminOtpError && <ErrorBox message={adminOtpError} />}
+                      {adminResendMsg && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                          className="mb-5 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+                          {adminResendMsg}
+                        </motion.div>
+                      )}
+
+                      <form onSubmit={handleAdminOtpVerify} className="space-y-6">
+                        <OtpInput values={adminOtpValues} onChange={setAdminOtpValues} />
+                        <SubmitButton loading={adminOtpLoading} text="Verify & Login" loadingText="Verifying..." />
+                      </form>
+
+                      <div className="mt-6 flex items-center justify-between">
+                        <button
+                          onClick={() => { setShowAdminOtp(false); setAdminOtpError(''); setAdminResendMsg(''); }}
+                          className="text-sm text-slate-500 hover:text-slate-300 transition"
+                        >
+                          ← Back to Login
+                        </button>
+                        <button
+                          onClick={handleAdminResendOtp}
+                          disabled={adminResendLoading}
+                          className="text-sm text-red-400 hover:text-red-300 font-medium transition disabled:opacity-50"
+                        >
+                          {adminResendLoading ? 'Sending...' : 'Resend OTP'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ) : (
-              /* ============ SIGN UP PANEL ============ */
+              /* ============ SIGN UP / OTP PANEL ============ */
               <motion.div
                 key="signup"
                 custom={direction}
@@ -228,45 +389,66 @@ export default function AuthPage() {
               >
                 <MobileLogo />
 
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Create Account</h1>
-                <p className="text-slate-500 text-sm mb-7">Start your mystical journey today</p>
+                <AnimatePresence mode="wait">
+                  {!showOtpPanel ? (
+                    /* ---- Registration Form ---- */
+                    <motion.div key="reg-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Create Account</h1>
+                      <p className="text-slate-500 text-sm mb-7">Start your mystical journey today</p>
 
-                {regError && <ErrorBox message={regError} />}
+                      {regError && <ErrorBox message={regError} />}
 
-                <form onSubmit={handleRegister} className="space-y-5">
-                  <InputField
-                    label="Full Name"
-                    type="text"
-                    value={regName}
-                    onChange={setRegName}
-                    placeholder="Your name"
-                  />
-                  <InputField
-                    label="Email Address"
-                    type="email"
-                    value={regEmail}
-                    onChange={setRegEmail}
-                    placeholder="you@example.com"
-                  />
-                  <PasswordField
-                    label="Password"
-                    value={regPassword}
-                    onChange={setRegPassword}
-                    show={showRegPw}
-                    toggleShow={() => setShowRegPw(!showRegPw)}
-                    minLength={6}
-                    placeholder="Min 6 characters"
-                  />
+                      <form onSubmit={handleRegister} className="space-y-5">
+                        <InputField label="Full Name" type="text" value={regName} onChange={setRegName} placeholder="Your name" />
+                        <InputField label="Email Address" type="email" value={regEmail} onChange={setRegEmail} placeholder="you@example.com" />
+                        <PasswordField label="Password" value={regPassword} onChange={setRegPassword} show={showRegPw} toggleShow={() => setShowRegPw(!showRegPw)} minLength={6} placeholder="Min 6 characters" />
+                        <SubmitButton loading={regLoading} text="Create Account" loadingText="Sending OTP..." />
+                      </form>
 
-                  <SubmitButton loading={regLoading} text="Create Account" loadingText="Creating..." />
-                </form>
+                      <p className="mt-8 text-center text-sm text-slate-600">
+                        Already have an account?{' '}
+                        <button onClick={toggle} className="text-cyan-400 hover:text-cyan-300 font-medium transition">Sign In</button>
+                      </p>
+                    </motion.div>
+                  ) : (
+                    /* ---- OTP Verification Form ---- */
+                    <motion.div key="otp-form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Verify Your Email</h1>
+                      <p className="text-slate-500 text-sm mb-7">
+                        We sent a 6-digit OTP to <span className="text-cyan-400">{otpEmail}</span>
+                      </p>
 
-                <p className="mt-8 text-center text-sm text-slate-600">
-                  Already have an account?{' '}
-                  <button onClick={toggle} className="text-cyan-400 hover:text-cyan-300 font-medium transition">
-                    Sign In
-                  </button>
-                </p>
+                      {otpError && <ErrorBox message={otpError} />}
+                      {resendMsg && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                          className="mb-5 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+                          {resendMsg}
+                        </motion.div>
+                      )}
+
+                      <form onSubmit={handleVerifyOtp} className="space-y-6">
+                        <OtpInput values={otpValues} onChange={setOtpValues} />
+                        <SubmitButton loading={otpLoading} text="Verify & Continue" loadingText="Verifying..." />
+                      </form>
+
+                      <div className="mt-6 flex items-center justify-between">
+                        <button
+                          onClick={() => { setShowOtpPanel(false); setOtpError(''); setResendMsg(''); }}
+                          className="text-sm text-slate-500 hover:text-slate-300 transition"
+                        >
+                          ← Back
+                        </button>
+                        <button
+                          onClick={handleResendOtp}
+                          disabled={resendLoading}
+                          className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition disabled:opacity-50"
+                        >
+                          {resendLoading ? 'Sending...' : 'Resend OTP'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
           </AnimatePresence>
@@ -374,6 +556,65 @@ function EyeIcon() {
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
+  );
+}
+
+function OtpInput({ values, onChange }) {
+  const handleChange = (index, val) => {
+    // Allow only alphanumeric
+    const char = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-1);
+    const newValues = [...values];
+    newValues[index] = char;
+    onChange(newValues);
+
+    // Auto-focus next input
+    if (char && index < 5) {
+      const next = document.getElementById(`otp-${index + 1}`);
+      next?.focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !values[index] && index > 0) {
+      const prev = document.getElementById(`otp-${index - 1}`);
+      prev?.focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
+    const newValues = [...values];
+    for (let i = 0; i < 6; i++) {
+      newValues[i] = pasted[i] || '';
+    }
+    onChange(newValues);
+    // Focus last filled input
+    const lastIndex = Math.min(pasted.length, 6) - 1;
+    if (lastIndex >= 0) {
+      const el = document.getElementById(`otp-${lastIndex}`);
+      el?.focus();
+    }
+  };
+
+  return (
+    <div className="flex justify-center gap-3" onPaste={handlePaste}>
+      {values.map((val, i) => (
+        <input
+          key={i}
+          id={`otp-${i}`}
+          type="text"
+          inputMode="text"
+          maxLength={1}
+          value={val}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          className="w-12 h-14 text-center text-xl font-bold rounded-xl bg-white/5 border border-cyan-900/30
+                     text-cyan-300 placeholder-slate-700 focus:border-cyan-500/50 focus:outline-none
+                     focus:ring-1 focus:ring-cyan-500/20 transition-all uppercase"
+        />
+      ))}
+    </div>
   );
 }
 

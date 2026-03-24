@@ -4,12 +4,15 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   GET_COURSE_BY_SLUG,
+  GET_COURSE_DETAILS,
   CREATE_ORDER,
   CREATE_PAYMENT,
   VERIFY_PAYMENT,
   FAILED_PAYMENT,
   MAKE_ENROLL,
   SINGLE_ENROLLMENT,
+  VALIDATE_COUPON,
+  APPLY_COUPON,
 } from "../../utils/api";
 import DashboardLayout from "@/app/dashboard/component/DashboardLayout";
 import { requestWithAuth } from "@/app/dashboard/utils/apiClient";
@@ -97,6 +100,7 @@ export default function CourseDetailPage() {
   const router = useRouter();
 
   const [course, setCourse] = useState(null);
+  const [courseDetails, setCourseDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [paymentPercent, setPaymentPercent] = useState(100);
@@ -104,9 +108,56 @@ export default function CourseDetailPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
   const getPayAmount = () => {
     const total = Number(course.totalFee || 0);
-    return ((total * paymentPercent) / 100).toFixed(2);
+    const afterCoupon = total - getCouponDiscount();
+    return ((afterCoupon * paymentPercent) / 100).toFixed(2);
+  };
+
+  const getCouponDiscount = () => {
+    if (!appliedCoupon) return 0;
+    const total = Number(course.totalFee || 0);
+    let discount = 0;
+    if (appliedCoupon.discountType === "percentage") {
+      discount = (total * appliedCoupon.discountValue) / 100;
+      if (appliedCoupon.maxDiscount) discount = Math.min(discount, appliedCoupon.maxDiscount);
+    } else {
+      discount = appliedCoupon.discountValue;
+    }
+    return Math.min(discount, total);
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    setAppliedCoupon(null);
+    try {
+      const res = await requestWithAuth(VALIDATE_COUPON, {
+        method: "POST",
+        body: { code: couponCode.trim(), courseId: course._id },
+        allowedRoles: ["user", "student"],
+      });
+      if (res?.data) {
+        setAppliedCoupon(res.data);
+      }
+    } catch (err) {
+      setCouponError(err.message || "Invalid coupon");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
   };
 
   /* ================= FETCH COURSE ================= */
@@ -138,6 +189,19 @@ export default function CourseDetailPage() {
         }
 
         if (isMounted) setCourse(data);
+
+        // Fetch course details (syllabus, FAQs, teacher info, etc.)
+        try {
+          const detailsRes = await requestWithAuth(GET_COURSE_DETAILS(data._id), {
+            method: "GET",
+            allowedRoles: ["user", "student"],
+          });
+          if (isMounted && detailsRes?.data) {
+            setCourseDetails(detailsRes.data);
+          }
+        } catch {
+          // Course details not found — that's fine
+        }
       } catch (err) {
         const message =
           err?.response?.data?.message ||
@@ -263,6 +327,17 @@ export default function CourseDetailPage() {
               allowedRoles: ["user", "student"],
             });
 
+            // Mark coupon as used if applied
+            if (appliedCoupon?.code) {
+              try {
+                await requestWithAuth(APPLY_COUPON, {
+                  method: "POST",
+                  body: { code: appliedCoupon.code },
+                  allowedRoles: ["user", "student"],
+                });
+              } catch {}
+            }
+
             setSuccessMsg("Payment successful! Redirecting...");
             setTimeout(() => {
               router.push(`/dashboard/myCourses`);
@@ -362,7 +437,7 @@ export default function CourseDetailPage() {
         <motion.div
           variants={fadeUp}
           custom={0}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/80 via-slate-800/50 to-blue-900/30 backdrop-blur-xl"
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-slate-900/80 via-slate-800/50 to-blue-900/30 backdrop-blur-xl"
         >
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
             {/* LEFT — Course Info */}
@@ -387,7 +462,7 @@ export default function CourseDetailPage() {
 
               {course.instructorId?.name && (
                 <motion.div variants={fadeUp} custom={3} className="flex items-center gap-3 mb-6">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                  <div className="w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
                     {course.instructorId.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -415,15 +490,15 @@ export default function CourseDetailPage() {
               {course.thumbnail && (
                 <motion.div
                   variants={scaleIn}
-                  className="relative h-full min-h-[280px] lg:min-h-full overflow-hidden group"
+                  className="relative h-full min-h-70 lg:min-h-full overflow-hidden group"
                 >
                   <img
                     src={course.thumbnail}
                     alt={course.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 via-transparent to-transparent lg:block hidden" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent lg:hidden" />
+                  <div className="absolute inset-0 bg-linear-to-r from-slate-900/60 via-transparent to-transparent lg:block hidden" />
+                  <div className="absolute inset-0 bg-linear-to-t from-slate-900/40 to-transparent lg:hidden" />
 
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
@@ -459,25 +534,25 @@ export default function CourseDetailPage() {
               className="grid grid-cols-2 sm:grid-cols-4 gap-3"
             >
               {formatDuration(course.duration) && (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+                <div className="rounded-xl border border-white/10 bg-white/3 p-4 text-center">
                   <p className="text-2xl font-bold text-white">{formatDuration(course.duration)}</p>
                   <p className="text-[11px] text-slate-500 uppercase tracking-wider mt-1">Duration</p>
                 </div>
               )}
               {course.level && (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+                <div className="rounded-xl border border-white/10 bg-white/3 p-4 text-center">
                   <p className="text-2xl font-bold text-white capitalize">{course.level}</p>
                   <p className="text-[11px] text-slate-500 uppercase tracking-wider mt-1">Level</p>
                 </div>
               )}
               {course.courseLanguage && (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+                <div className="rounded-xl border border-white/10 bg-white/3 p-4 text-center">
                   <p className="text-2xl font-bold text-white capitalize">{course.courseLanguage}</p>
                   <p className="text-[11px] text-slate-500 uppercase tracking-wider mt-1">Language</p>
                 </div>
               )}
               {course.partialPaymentEnabled && (
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+                <div className="rounded-xl border border-white/10 bg-white/3 p-4 text-center">
                   <p className="text-2xl font-bold text-emerald-400">Yes</p>
                   <p className="text-[11px] text-slate-500 uppercase tracking-wider mt-1">EMI Available</p>
                 </div>
@@ -489,7 +564,7 @@ export default function CourseDetailPage() {
               <motion.div
                 variants={fadeUp}
                 custom={1.5}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+                className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-sm p-6 lg:p-8"
               >
                 <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                   <span className="w-1 h-5 rounded-full bg-blue-500 inline-block" />
@@ -506,7 +581,7 @@ export default function CourseDetailPage() {
               <motion.div
                 variants={fadeUp}
                 custom={2}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+                className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-sm p-6 lg:p-8"
               >
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <span className="w-1 h-5 rounded-full bg-purple-500 inline-block" />
@@ -528,7 +603,7 @@ export default function CourseDetailPage() {
               <motion.div
                 variants={fadeUp}
                 custom={2.5}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+                className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-sm p-6 lg:p-8"
               >
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <span className="w-1 h-5 rounded-full bg-emerald-500 inline-block" />
@@ -547,7 +622,7 @@ export default function CourseDetailPage() {
                       variants={listItem}
                       className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10"
                     >
-                      <span className="mt-0.5 w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <span className="mt-0.5 w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
@@ -564,7 +639,7 @@ export default function CourseDetailPage() {
               <motion.div
                 variants={fadeUp}
                 custom={3}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+                className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-sm p-6 lg:p-8"
               >
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <span className="w-1 h-5 rounded-full bg-amber-500 inline-block" />
@@ -602,6 +677,266 @@ export default function CourseDetailPage() {
                     {tag}
                   </span>
                 ))}
+              </motion.div>
+            )}
+
+            {/* ===== COURSE DETAILS SECTIONS ===== */}
+
+            {/* Detailed Description */}
+            {courseDetails?.detailedDescription && (
+              <motion.div
+                variants={fadeUp}
+                custom={4}
+                className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-purple-500 inline-block" />
+                  Detailed Description
+                </h2>
+                <p className="text-slate-400 leading-relaxed text-sm whitespace-pre-line">
+                  {courseDetails.detailedDescription}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Course Outline */}
+            {courseDetails?.courseOutline && (
+              <motion.div
+                variants={fadeUp}
+                custom={4.5}
+                className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-cyan-500 inline-block" />
+                  Course Outline
+                </h2>
+                <p className="text-slate-400 leading-relaxed text-sm whitespace-pre-line">
+                  {courseDetails.courseOutline}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Syllabus */}
+            {courseDetails?.syllabus?.length > 0 && (
+              <motion.div
+                variants={fadeUp}
+                custom={5}
+                className="rounded-2xl border border-white/10 bg-white/3 backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-indigo-500 inline-block" />
+                  Syllabus
+                </h2>
+                <motion.div
+                  variants={staggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="space-y-3"
+                >
+                  {courseDetails.syllabus.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      variants={listItem}
+                      className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10"
+                    >
+                      <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        {item.title}
+                      </h3>
+                      {item.description && (
+                        <p className="text-slate-400 text-sm mt-2 ml-8">{item.description}</p>
+                      )}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Target Audience */}
+            {courseDetails?.targetAudience?.length > 0 && (
+              <motion.div
+                variants={fadeUp}
+                custom={5.5}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-pink-500 inline-block" />
+                  Who is this for?
+                </h2>
+                <motion.div
+                  variants={staggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                >
+                  {courseDetails.targetAudience.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      variants={listItem}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-pink-500/5 border border-pink-500/10"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ec4899" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </span>
+                      <span className="text-sm text-slate-300">{item}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Prerequisites */}
+            {courseDetails?.prerequisites?.length > 0 && (
+              <motion.div
+                variants={fadeUp}
+                custom={6}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-orange-500 inline-block" />
+                  Prerequisites
+                </h2>
+                <motion.div
+                  variants={staggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="space-y-2"
+                >
+                  {courseDetails.prerequisites.map((item, i) => (
+                    <motion.div
+                      key={i}
+                      variants={listItem}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-orange-500/5 border border-orange-500/10"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
+                      <span className="text-sm text-slate-300">{item}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Demo Video */}
+            {courseDetails?.demoVideo && (
+              <motion.div
+                variants={fadeUp}
+                custom={6.5}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-rose-500 inline-block" />
+                  Demo Video
+                </h2>
+                <div className="rounded-xl overflow-hidden aspect-video bg-black">
+                  <iframe
+                    src={courseDetails.demoVideo.replace("watch?v=", "embed/")}
+                    title="Demo Video"
+                    className="w-full h-full"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* FAQs */}
+            {courseDetails?.faqs?.length > 0 && (
+              <motion.div
+                variants={fadeUp}
+                custom={7}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-teal-500 inline-block" />
+                  Frequently Asked Questions
+                </h2>
+                <motion.div
+                  variants={staggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="space-y-3"
+                >
+                  {courseDetails.faqs.map((faq, i) => (
+                    <motion.div
+                      key={i}
+                      variants={listItem}
+                      className="p-4 rounded-xl bg-teal-500/5 border border-teal-500/10"
+                    >
+                      <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <span className="text-teal-400 font-bold">Q.</span>
+                        {faq.question}
+                      </h3>
+                      {faq.answer && (
+                        <p className="text-slate-400 text-sm mt-2 ml-6">{faq.answer}</p>
+                      )}
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Instructor Card */}
+            {courseDetails?.teacherName && (
+              <motion.div
+                variants={fadeUp}
+                custom={7.5}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6 lg:p-8"
+              >
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-5 rounded-full bg-violet-500 inline-block" />
+                  Meet Your Instructor
+                </h2>
+                <div className="flex items-start gap-4">
+                  {courseDetails.teacherImg ? (
+                    <img
+                      src={courseDetails.teacherImg}
+                      alt={courseDetails.teacherName}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-violet-500/30 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                      {courseDetails.teacherName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-white font-semibold">{courseDetails.teacherName}</h3>
+                    {courseDetails.teacherDesignation && (
+                      <p className="text-violet-400 text-sm">{courseDetails.teacherDesignation}</p>
+                    )}
+                    {courseDetails.teacherBio && (
+                      <p className="text-slate-400 text-sm mt-2 leading-relaxed">{courseDetails.teacherBio}</p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Certificate Badge */}
+            {courseDetails?.certificateEnabled && (
+              <motion.div
+                variants={fadeUp}
+                custom={8}
+                className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 backdrop-blur-sm p-5 flex items-center gap-4"
+              >
+                <div className="w-12 h-12 rounded-full bg-yellow-500/15 flex items-center justify-center flex-shrink-0">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="7" />
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-sm">Certificate of Completion</h3>
+                  <p className="text-slate-400 text-xs mt-0.5">Earn a certificate after completing this course</p>
+                </div>
               </motion.div>
             )}
           </div>
@@ -647,6 +982,53 @@ export default function CourseDetailPage() {
                       <p className="text-slate-500 text-xs mt-1">
                         of {course.currency || "INR"} {Number(course.totalFee).toFixed(2)} total
                       </p>
+                    )}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                  {/* Coupon Section */}
+                  <div>
+                    <p className="text-slate-400 text-xs font-medium mb-2 uppercase tracking-wider">Have a Coupon?</p>
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <div>
+                          <span className="text-emerald-400 font-bold text-sm tracking-wider">{appliedCoupon.code}</span>
+                          <p className="text-emerald-300/70 text-xs mt-0.5">
+                            {appliedCoupon.discountType === "percentage"
+                              ? `${appliedCoupon.discountValue}% OFF`
+                              : `₹${appliedCoupon.discountValue} OFF`}
+                            {" "}— You save ₹{getCouponDiscount().toFixed(0)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleRemoveCoupon}
+                          className="text-xs text-red-400 hover:text-red-300 transition"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
+                          placeholder="Enter code"
+                          className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none uppercase tracking-wider"
+                        />
+                        <button
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading || !couponCode.trim()}
+                          className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {couponLoading ? "..." : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                    {couponError && (
+                      <p className="text-red-400 text-xs mt-1.5">{couponError}</p>
                     )}
                   </div>
 

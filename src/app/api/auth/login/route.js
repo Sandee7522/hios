@@ -63,6 +63,11 @@ export async function POST(req) {
       return validationError(result.message);
     }
 
+    // Admin requires OTP verification
+    if (result.requireOtp) {
+      return success(result.message, { ...result.data, requireOtp: true });
+    }
+
     return success("Login successful", result.data);
   } catch (error) {
     console.error(error);

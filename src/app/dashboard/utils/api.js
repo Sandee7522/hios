@@ -15,9 +15,14 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // user auth api's
 export const REGISTER = `${API_URL}/auth/register`;
+export const VERIFY_OTP = `${API_URL}/auth/verify-otp`;
+export const RESEND_OTP = `${API_URL}/auth/resend-otp`;
 export const LOGIN = `${API_URL}/auth/login`;
+export const VERIFY_LOGIN_OTP = `${API_URL}/auth/verify-login-otp`;
+export const RESEND_LOGIN_OTP = `${API_URL}/auth/resend-login-otp`;
 export const LOGOUT = `${API_URL}/auth/logout`;
 export const FORGET_PASSWORD = `${API_URL}/auth/forgetPassword`;
+export const VERIFY_RESET_OTP = `${API_URL}/auth/verify-reset-otp`;
 export const RESET_PASSWORD = `${API_URL}/auth/resetPassword`;
 export const CREATE_PROFILE = `${API_URL}/auth/profile/createProfile`;
 export const UPDATE_PROFILE = `${API_URL}/auth/profile/updateProfile`;
@@ -25,6 +30,7 @@ export const GET_PROFILE_BY_ID = (userId) => `${API_URL}/auth/profile/getProfile
 export const GET_ALL_CATEGORY = `${API_URL}/category/getAllCategory`;
 export const GET_ALL_COURSES = `${API_URL}/courses/getAllCourse`;
 export const GET_COURSE_BY_SLUG = (slug) => `${API_URL}/courses/${slug}`;
+export const GET_COURSE_DETAILS = (courseId) => `${API_URL}/courses/courseDetails?courseId=${courseId}`;
 export const GET_ALL_MODULES_BYID = `${API_URL}/module&Lessons/getModuleById`;
 export const MODULE_BY_COURSEID = `${API_URL}/module&Lessons/moduleByCourseId`;
 export const GET_LESSON = `${API_URL}/module&Lessons/getLesson`;
@@ -42,7 +48,18 @@ export const USER_ENROLLMENTS = `${API_URL}/enrollment/userEnrollment`;
 //                                   ADMIN API'S
 // **********************************            *************************************
 
+// Coupon APIs
+export const GENERATE_COUPON = `${API_URL}/coupon/generate`;
+export const VALIDATE_COUPON = `${API_URL}/coupon/validate`;
+export const APPLY_COUPON = `${API_URL}/coupon/apply`;
+
+// Earning OTP APIs
+export const SEND_EARNING_OTP = `${API_URL}/auth/earning-otp`;
+export const VERIFY_EARNING_OTP = `${API_URL}/auth/verify-earning-otp`;
+
 export const GET_ALL_USERS = `${API_URL}/auth/getAllUsers`;
+export const FORCE_LOGOUT_USER = `${API_URL}/auth/forceLogout`;
+export const GET_DELETION_LOGS = `${API_URL}/auth/deletion-logs`;
 export const CREATE_ROLE = `${API_URL}/roleAssign/roles`;
 export const GET_ALL_ROLES = `${API_URL}/roleAssign/roles`;
 export const ASSIGN_ROLE = `${API_URL}/auth/assignRole`;
@@ -69,6 +86,8 @@ export const GET_ALL_MODULE_ADMIN = `${API_URL}/admin/modules/getAllModule`;
 export const RECODER_MODULE_ADMIN = `${API_URL}/admin/modules/recoderModule`;
 export const REORDER_MODULE_ADMIN = `${API_URL}/admin/modules/reorderModule`;
 export const CREATE_COURSE_ADMIN = `${API_URL}/admin/course/createCourse`;
+export const COURSE_DETAILS_ADMIN = `${API_URL}/admin/course/courseDetails`;
+export const GET_COURSE_DETAILS_ADMIN = (courseId) => `${API_URL}/admin/course/courseDetails?courseId=${courseId}`;
 export const CREATE_LESSON_ADMIN = `${API_URL}/admin/lesson/createLesson`;
 export const DELETE_LESSON_ADMIN = `${API_URL}/admin/lesson/deleteLesson`;
 export const GET_LESSON_ADMIN = `${API_URL}/admin/lesson/getLesson`;

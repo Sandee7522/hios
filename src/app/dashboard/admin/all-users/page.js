@@ -1,7 +1,7 @@
 "use client";
 import { Fragment, useEffect, useState, useRef, useCallback } from "react";
 import { getUserProfile, getUserRole } from "../../utils/auth";
-import { GET_ALL_USERS } from "../../utils/api";
+import { GET_ALL_USERS, FORCE_LOGOUT_USER } from "../../utils/api";
 import MyLoader from "@/components/landing/MyLoder";
 import { requestWithAuth } from "../../utils/apiClient";
 import SuccessBox from "@/components/common/SuccessBox";
@@ -9,6 +9,8 @@ import ErrorBox from "@/components/common/ErrorBox";
 import AssignRole from "@/components/common/AssignRole";
 import PageHeader from "@/components/common/PageHeader";
 import AdminTable from "@/components/common/AdminTable";
+import ConfirmModal from "@/components/common/ConfirmModal";
+import GenerateCouponModal from "@/components/common/GenerateCouponModal";
 
 /** Debounce – delays a value by `delay` ms */
 function useDebounce(value, delay = 500) {
@@ -34,28 +36,15 @@ function RoleBadge({ role }) {
   );
 }
 
-function StatusBadge({ verified }) {
-  return verified ? (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-medium bg-green-500/15 text-green-400 border-green-500/30">
-      Verified
-    </span>
-  ) : (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-medium bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
-      Unverified
-    </span>
-  );
-}
-
 const sortFieldMap = {
   name: "name",
   email: "email",
   user_type: "role.user_type",
-  is_verified: "isEmailVerified",
   created_at: "created_at",
 };
 
-const tableKeys = ["name", "email", "user_type", "is_verified", "created_at"];
-const headings = { name: "Name", email: "Email", user_type: "Role", is_verified: "Status", created_at: "Joined" };
+const tableKeys = ["name", "email", "user_type", "created_at"];
+const headings = { name: "Name", email: "Email", user_type: "Role", created_at: "Joined" };
 
 export default function AllUsers() {
   const [users, setUsers] = useState([]);
@@ -66,6 +55,10 @@ export default function AllUsers() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [expandedUserId, setExpandedUserId] = useState(null);
+  const [forceLogoutLoading, setForceLogoutLoading] = useState(null);
+  const [forceLogoutUser, setForceLogoutUser] = useState(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [couponUser, setCouponUser] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -144,6 +137,31 @@ export default function AllUsers() {
     setCurrentPage(1);
   };
 
+  const handleForceLogout = async () => {
+    if (!forceLogoutUser) return;
+
+    setForceLogoutLoading(forceLogoutUser.id);
+    setError("");
+    setSuccessMessage("");
+    try {
+      await requestWithAuth(FORCE_LOGOUT_USER, {
+        method: "POST",
+        body: { userId: forceLogoutUser.id, reason: deleteReason.trim() },
+        allowedRoles: ["admin"],
+      });
+      setSuccessMessage(
+        `User "${forceLogoutUser.name || forceLogoutUser.email}" has been force logged out and all data deleted successfully.`
+      );
+      fetchUsers();
+    } catch (err) {
+      setError(err.message || "Failed to force logout user");
+    } finally {
+      setForceLogoutLoading(null);
+      setForceLogoutUser(null);
+      setDeleteReason("");
+    }
+  };
+
   if (initialLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -169,9 +187,6 @@ export default function AllUsers() {
           <td className="px-4 py-3 whitespace-nowrap">
             <RoleBadge role={user.role} />
           </td>
-          <td className="px-4 py-3 whitespace-nowrap">
-            <StatusBadge verified={user.isEmailVerified} />
-          </td>
           <td className="px-4 py-3 whitespace-nowrap text-slate-400 text-xs">
             {user.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}
           </td>
@@ -192,6 +207,26 @@ export default function AllUsers() {
                            hover:bg-amber-500/25 transition-colors duration-150"
               >
                 Assign Role
+              </button>
+              {(user.role?.user_type === "admin" || user.role?.user_type === "instructor") && (
+                <button
+                  onClick={() => setCouponUser(user)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium
+                             bg-emerald-500/15 text-emerald-400 border border-emerald-500/30
+                             hover:bg-emerald-500/25 transition-colors duration-150"
+                >
+                  Generate Coupon
+                </button>
+              )}
+              <button
+                onClick={() => setForceLogoutUser(user)}
+                disabled={forceLogoutLoading === user.id}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium
+                           bg-red-500/15 text-red-400 border border-red-500/30
+                           hover:bg-red-500/25 transition-colors duration-150
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {forceLogoutLoading === user.id ? "Deleting..." : "Force Logout"}
               </button>
             </div>
           </td>
@@ -287,6 +322,42 @@ export default function AllUsers() {
             setSuccessMessage(msg);
             fetchUsers();
           }}
+        />
+      )}
+
+      <ConfirmModal
+        isOpen={!!forceLogoutUser}
+        title="Force Logout & Delete User"
+        message={
+          <>
+            Are you sure you want to force logout and permanently delete all data for{" "}
+            <strong className="text-white">{forceLogoutUser?.name || forceLogoutUser?.email}</strong>?
+            <br /><br />
+            This will remove the user and their data from every collection. This action cannot be undone.
+            <textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="Reason for deletion (optional)"
+              rows={2}
+              className="mt-4 w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600
+                         text-white text-sm placeholder-slate-500 focus:border-red-500/50
+                         focus:outline-none focus:ring-1 focus:ring-red-500/20 resize-none"
+            />
+          </>
+        }
+        confirmText="Delete User"
+        cancelText="Cancel"
+        variant="danger"
+        loading={!!forceLogoutLoading}
+        onConfirm={handleForceLogout}
+        onCancel={() => { setForceLogoutUser(null); setDeleteReason(""); }}
+      />
+
+      {couponUser && (
+        <GenerateCouponModal
+          user={couponUser}
+          onClose={() => setCouponUser(null)}
+          onSuccess={(msg) => setSuccessMessage(msg)}
         />
       )}
     </>

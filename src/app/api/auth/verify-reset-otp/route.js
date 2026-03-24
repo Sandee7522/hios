@@ -3,11 +3,9 @@ import AuthService from "@/services/auth";
 import { success, serverError, validationError } from "@/utils/apiResponse";
 import { z } from "zod";
 
-const resetPasswordSchema = z.object({
+const schema = z.object({
   email: z.string().email("Invalid email address"),
   otp: z.string().length(6, "OTP must be 6 characters"),
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
 });
 
 export async function POST(req) {
@@ -15,15 +13,14 @@ export async function POST(req) {
     await connectDB();
 
     const body = await req.json();
-    const validation = resetPasswordSchema.safeParse(body);
+    const parsed = schema.safeParse(body);
 
-    if (!validation.success) {
-      const errors = validation.error.issues.map((e) => e.message);
-      return validationError(errors, 422);
+    if (!parsed.success) {
+      return validationError(parsed.error.errors.map((e) => e.message));
     }
 
     const service = new AuthService();
-    const result = await service.resetPassword(validation.data);
+    const result = await service.verifyResetOtp(parsed.data);
 
     if (!result.success) {
       return validationError(result.message);
@@ -32,6 +29,6 @@ export async function POST(req) {
     return success(result.message, result.data);
   } catch (error) {
     console.error(error);
-    return serverError(error.message);
+    return serverError();
   }
 }

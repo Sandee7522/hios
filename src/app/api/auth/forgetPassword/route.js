@@ -22,6 +22,10 @@ export async function POST(req) {
     const service = new AuthService();
     const result = await service.forgetPassword(validation.data);
 
+    if (!result.success) {
+      return validationError(result.message);
+    }
+
     return success(result.message, result.data);
   } catch (error) {
     console.error(error);

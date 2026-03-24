@@ -8,9 +8,11 @@ import ErrorBox from "@/components/common/ErrorBox";
 import PageHeader from "@/components/common/PageHeader";
 import AdminTable from "@/components/common/AdminTable";
 import { RiDeleteBin6Line, RiEdit2Line } from "react-icons/ri";
+import { HiOutlineDocumentText } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
 import CreateAndUpdateCourse from "../commonModals/CreateAndUpdateCourse";
 import DeleteCourseModal from "../commonModals/DeleteCourse";
+import CourseDetailsModal from "../commonModals/CourseDetailsModal";
 
 const TABLE_KEYS = [
   "title", "slug", "description", "thumbnail", "instructor", "category",
@@ -64,6 +66,7 @@ export default function AllCourses() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
 
@@ -161,9 +164,9 @@ export default function AllCourses() {
   const arrayBadges = (arr) => {
     if (!arr?.length) return "—";
     return (
-      <div className="flex flex-wrap gap-1 max-w-[180px]">
+      <div className="flex flex-wrap gap-1 max-w-45">
         {arr.slice(0, 3).map((item, i) => (
-          <span key={i} className="px-2 py-0.5 rounded text-[11px] bg-slate-700/60 text-slate-300 truncate max-w-[100px]">{item}</span>
+          <span key={i} className="px-2 py-0.5 rounded text-[11px] bg-slate-700/60 text-slate-300 truncate max-w-25">{item}</span>
         ))}
         {arr.length > 3 && <span className="text-[11px] text-slate-500">+{arr.length - 3}</span>}
       </div>
@@ -184,7 +187,7 @@ export default function AllCourses() {
     <tr key={course._id} className="hover:bg-slate-800/40 transition-colors">
       <td className="px-4 py-3 text-white font-medium whitespace-nowrap">{course.title || "—"}</td>
       <td className="px-4 py-3 text-slate-400 text-xs">{course.slug || "—"}</td>
-      <td className="px-4 py-3 text-slate-400 max-w-[180px] truncate">{course.description || "—"}</td>
+      <td className="px-4 py-3 text-slate-400 max-w-45 truncate">{course.description || "—"}</td>
       <td className="px-4 py-3 bg-indigo-900/25">
         {course.thumbnail ? (
           <button
@@ -220,10 +223,14 @@ export default function AllCourses() {
       <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{course.created_at ? new Date(course.created_at).toLocaleDateString() : "—"}</td>
       <td className="px-4 py-3 sticky right-0 bg-slate-900 z-10">
         <div className="flex items-center gap-2">
-          <button onClick={() => { setSelectedCourse(course); setShowUpdateModal(true); }} className="p-2 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition shadow-[0_6px_16px_rgba(59,130,246,0.25)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.35)]">
+          <button onClick={() => { setSelectedCourse(course); setShowDetailsModal(true); }} className="px-3 py-1.5 rounded-md bg-purple-500/10 hover:bg-purple-500/20 transition text-purple-400 text-xs font-medium border border-purple-500/30 whitespace-nowrap" title="Add / Edit Course Details">
+            <HiOutlineDocumentText size={14} className="inline mr-1" />
+            Course Details
+          </button>
+          <button onClick={() => { setSelectedCourse(course); setShowUpdateModal(true); }} className="p-2 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition shadow-[0_6px_16px_rgba(59,130,246,0.25)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.35)]" title="Edit Course">
             <RiEdit2Line size={20} color="#3b82f6" />
           </button>
-          <button onClick={() => { setSelectedCourse(course); setShowDeleteModal(true); }} className="p-2 rounded-md bg-red-500/10 hover:bg-red-500/20 transition shadow-[0_6px_16px_rgba(239,68,68,0.25)] hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]">
+          <button onClick={() => { setSelectedCourse(course); setShowDeleteModal(true); }} className="p-2 rounded-md bg-red-500/10 hover:bg-red-500/20 transition shadow-[0_6px_16px_rgba(239,68,68,0.25)] hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]" title="Delete Course">
             <RiDeleteBin6Line size={20} color="#ef4444" />
           </button>
         </div>
@@ -279,14 +286,21 @@ export default function AllCourses() {
           onSuccess={(msg) => { setSuccessMessage(msg); setShowDeleteModal(false); setSelectedCourse(null); fetchCourses(); }}
         />
       )}
+      {showDetailsModal && selectedCourse && (
+        <CourseDetailsModal
+          course={selectedCourse}
+          onClose={() => { setShowDetailsModal(false); setSelectedCourse(null); }}
+          onSuccess={(msg) => { setSuccessMessage(msg); setShowDetailsModal(false); setSelectedCourse(null); }}
+        />
+      )}
 
       {previewImage && (
         <div
-          className="fixed inset-0 z-[1200] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-1200 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setPreviewImage("")}
         >
           <div
-            className="relative w-[90vw] h-[90vw] sm:w-[70vw] sm:h-[70vw] lg:w-[50vw] lg:h-[50vh] max-w-[900px] max-h-[700px] rounded-xl border border-slate-700 bg-slate-950 p-2"
+            className="relative w-[90vw] h-[90vw] sm:w-[70vw] sm:h-[70vw] lg:w-[50vw] lg:h-[50vh] max-w-225 max-h-175 rounded-xl border border-slate-700 bg-slate-950 p-2"
             onClick={(e) => e.stopPropagation()}
           >
             <button

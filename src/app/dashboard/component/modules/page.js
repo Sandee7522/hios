@@ -13,6 +13,7 @@ import {
   GET_LESSON,
 } from "@/app/dashboard/utils/api";
 import MyLoader from "@/components/landing/MyLoder";
+import PageHeader from "@/components/common/PageHeader";
 
 export default function ModulesPage() {
   const searchParams = useSearchParams();
@@ -208,60 +209,21 @@ export default function ModulesPage() {
       }}
     >
       {/* ── Top Navbar ── */}
-      <header
-        style={{
-          height: "60px",
-          background: "var(--dashboard-surface)",
-          borderBottom: "1px solid var(--dashboard-border)",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 1.25rem",
-          gap: "1rem",
-          position: "sticky",
-          top: 0,
-          zIndex: 500,
-        }}
-      >
-        <button
-          onClick={() => setSidebarOpen((v) => !v)}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "var(--dashboard-text-primary)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-          }}
-          aria-label="Toggle sidebar"
-        >
-          <TfiMenuAlt size={20} />
-        </button>
-
-        <h1
-          style={{
-            fontSize: "1rem",
-            fontWeight: 700,
-            margin: 0,
-            color: "var(--dashboard-text-primary)",
-            flex: 1,
-          }}
-        >
-          {selectedModule?.title || "Learning Dashboard"}
-        </h1>
-
-        {selectedLesson && (
-          <span
-            style={{
-              fontSize: "0.8rem",
-              color: "var(--dashboard-text-muted)",
-              display: "none",
-            }}
-            className="lesson-breadcrumb"
-          >
-            {selectedLesson.title}
-          </span>
-        )}
-      </header>
+      <div style={{ position: "sticky", top: 0, zIndex: 500, padding: "0.5rem 1rem 0" }}>
+        <PageHeader
+          title={selectedModule?.title || "Learning Dashboard"}
+          subtitle={selectedLesson?.title || "Select a lesson to start learning"}
+          actions={
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-700/80 bg-slate-900/70 text-slate-300 hover:text-white hover:bg-slate-800 transition"
+              aria-label="Toggle sidebar"
+            >
+              <TfiMenuAlt size={20} />
+            </button>
+          }
+        />
+      </div>
 
       {/* ── Body ── */}
       <div

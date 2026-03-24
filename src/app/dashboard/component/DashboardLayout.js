@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "../dashboard.module.css";
 import { logout, getUserProfile } from "../utils/auth";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 export default function DashboardLayout({ children, role }) {
   const pathname = usePathname();
@@ -15,6 +16,7 @@ export default function DashboardLayout({ children, role }) {
   const [userProfile, setUserProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // =============================
   // Load Profile
@@ -58,9 +60,7 @@ export default function DashboardLayout({ children, role }) {
   // Logout
   // =============================
   const handleLogout = useCallback(() => {
-    const confirmed = window.confirm("Are you sure you want to logout?");
-    if (!confirmed) return;
-    logout();
+    setShowLogoutModal(true);
   }, []);
 
   if (!role) return null;
@@ -236,6 +236,20 @@ export default function DashboardLayout({ children, role }) {
       >
         {children}
       </main>
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        variant="warning"
+        onConfirm={() => {
+          setShowLogoutModal(false);
+          logout();
+        }}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </div>
   );
 }

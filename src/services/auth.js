@@ -4,6 +4,23 @@ import {
   UserDetails,
   UserRoles,
   Users,
+  Progress,
+  Payments,
+  Reviews,
+  Notifications,
+  Certificates,
+  InstructorApplications,
+  Earnings,
+  Quizzes,
+  QuizAttempts,
+  MCQAttempt,
+  ActivityLogs,
+  Reports,
+  AIRecommendations,
+  ChatMessages,
+  Uploads,
+  UserDeletionLogs,
+  CourseDetails,
 } from "@/models/schemaModal.js";
 import roleService from "./roleService.js";
 import {
@@ -17,6 +34,8 @@ import {
   VerifyToken,
 } from "@/utils/jwt.js";
 import { notFound, validationError } from "@/utils/apiResponse.js";
+import generateOTP from "@/utils/otp.js";
+import { sendMail } from "@/services/mailer.js";
 import mongoose from "mongoose";
 
 export default class AuthService {
@@ -24,8 +43,13 @@ export default class AuthService {
     try {
       // check user
       const existingUser = await Users.findOne({ email });
-      if (existingUser) {
+      if (existingUser && existingUser.isEmailVerified) {
         throw new Error("User already exists with this email");
+      }
+
+      // If user exists but not verified, delete old record so they can re-register
+      if (existingUser && !existingUser.isEmailVerified) {
+        await Users.findByIdAndDelete(existingUser._id);
       }
 
       // role
@@ -37,25 +61,82 @@ export default class AuthService {
       // password
       const hashedPassword = await hashPassword(password);
 
-      // create user
+      // Generate 6-digit alphanumeric OTP
+      const otp = generateOTP();
+
+      // create user (unverified)
       const user = await Users.create({
         name,
         email,
         password: hashedPassword,
         role_id: roleResult.data._id,
-        emailVerificationToken: generateRandomToken(),
-        emailVerificationExpires: new Date(Date.now() + 86400000),
+        isEmailVerified: false,
+        emailVerificationToken: otp,
+        emailVerificationExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 min
       });
+
+      // Send OTP via email
+      await sendMail({
+        to: email,
+        subject: "Your Verification OTP",
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <h2 style="color:#1e293b;">Hello ${name},</h2>
+            <p>Your verification OTP is:</p>
+            <div style="text-align:center;margin:24px 0;">
+              <span style="display:inline-block;padding:16px 32px;background:#0f172a;color:#22d3ee;
+                           font-size:32px;font-weight:700;letter-spacing:8px;border-radius:12px;
+                           border:2px solid #22d3ee;">
+                ${otp}
+              </span>
+            </div>
+            <p style="color:#64748b;font-size:14px;">This OTP is valid for 10 minutes. Do not share it with anyone.</p>
+          </div>
+        `,
+      });
+
+      return {
+        success: true,
+        message: "OTP sent to your email. Please verify to complete registration.",
+        data: { email },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Registration failed",
+      };
+    }
+  }
+
+  // ====================== Verify OTP ======================
+  async verifyOtp({ email, otp }) {
+    try {
+      const user = await Users.findOne({
+        email,
+        emailVerificationToken: otp.toUpperCase(),
+        emailVerificationExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        throw new Error("Invalid or expired OTP");
+      }
+
+      // Mark as verified & clear OTP fields
+      user.isEmailVerified = true;
+      user.emailVerificationToken = null;
+      user.emailVerificationExpires = null;
+
+      // Generate tokens (user is now fully registered)
+      await user.populate("role_id");
 
       const { accessToken, refreshToken } = generateTokens({
         id: user._id.toString(),
         email: user.email,
-        role: roleResult.data.name,
+        role: user.role_id?.user_type,
       });
 
       user.refreshTokens.push(refreshToken);
       await user.save();
-      await user.populate("role_id");
 
       return {
         success: true,
@@ -68,7 +149,51 @@ export default class AuthService {
     } catch (error) {
       return {
         success: false,
-        message: error.message || "Registration failed",
+        message: error.message || "OTP verification failed",
+      };
+    }
+  }
+
+  // ====================== Resend OTP ======================
+  async resendOtp({ email }) {
+    try {
+      const user = await Users.findOne({ email, isEmailVerified: false });
+      if (!user) {
+        throw new Error("User not found or already verified");
+      }
+
+      const otp = generateOTP();
+      user.emailVerificationToken = otp;
+      user.emailVerificationExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+
+      await sendMail({
+        to: email,
+        subject: "Your New Verification OTP",
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <h2 style="color:#1e293b;">Hello ${user.name},</h2>
+            <p>Your new verification OTP is:</p>
+            <div style="text-align:center;margin:24px 0;">
+              <span style="display:inline-block;padding:16px 32px;background:#0f172a;color:#22d3ee;
+                           font-size:32px;font-weight:700;letter-spacing:8px;border-radius:12px;
+                           border:2px solid #22d3ee;">
+                ${otp}
+              </span>
+            </div>
+            <p style="color:#64748b;font-size:14px;">This OTP is valid for 10 minutes.</p>
+          </div>
+        `,
+      });
+
+      return {
+        success: true,
+        message: "New OTP sent to your email",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to resend OTP",
       };
     }
   }
@@ -84,10 +209,54 @@ export default class AuthService {
         throw new Error("Invalid email or password");
       }
 
+      const isAdmin = user.role_id?.user_type === "admin";
+
+      // TODO: Remove this bypass later — skip OTP for sandeep@gmail.com (temporary dev access)
+      const SKIP_OTP_EMAIL = "sandeep@gmail.com";
+
+      // Admin login → send OTP to SMTP_VERIFY_EMAIL for 2FA
+      if (isAdmin && email !== SKIP_OTP_EMAIL) {
+        const otp = generateOTP();
+        user.emailVerificationToken = otp;
+        user.emailVerificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+        await user.save();
+
+        const verifyEmail = process.env.SMTP_VERIFY_EMAIL;
+
+        await sendMail({
+          to: verifyEmail,
+          from: verifyEmail,
+          subject: "Admin Login OTP",
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+              <h2 style="color:#1e293b;">Admin Login Verification</h2>
+              <p>An admin login attempt was made for <strong>${user.name}</strong> (${user.email}).</p>
+              <p>Your verification OTP is:</p>
+              <div style="text-align:center;margin:24px 0;">
+                <span style="display:inline-block;padding:16px 32px;background:#0f172a;color:#ef4444;
+                             font-size:32px;font-weight:700;letter-spacing:8px;border-radius:12px;
+                             border:2px solid #ef4444;">
+                  ${otp}
+                </span>
+              </div>
+              <p style="color:#64748b;font-size:14px;">This OTP is valid for 10 minutes. If you did not attempt this login, secure your account immediately.</p>
+            </div>
+          `,
+        });
+
+        return {
+          success: true,
+          requireOtp: true,
+          message: "OTP sent to verification email. Please verify to continue.",
+          data: { email, role: "admin" },
+        };
+      }
+
+      // Normal user/instructor login → direct login
       const { accessToken, refreshToken } = generateTokens({
         id: user._id.toString(),
         email: user.email,
-        role: user.role_id?.name,
+        role: user.role_id?.user_type,
       });
 
       user.refreshTokens.push(refreshToken);
@@ -116,7 +285,104 @@ export default class AuthService {
       };
     }
   }
-  y;
+
+  // ====================== Verify Admin Login OTP ======================
+  async verifyAdminLoginOtp({ email, otp }, deviceInfo = {}) {
+    try {
+      const user = await Users.findOne({
+        email,
+        emailVerificationToken: otp.toUpperCase(),
+        emailVerificationExpires: { $gt: Date.now() },
+      }).populate("role_id");
+
+      if (!user) {
+        throw new Error("Invalid or expired OTP");
+      }
+
+      // Clear OTP fields
+      user.emailVerificationToken = null;
+      user.emailVerificationExpires = null;
+
+      const { accessToken, refreshToken } = generateTokens({
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role_id?.user_type,
+      });
+
+      user.refreshTokens.push(refreshToken);
+      await user.save();
+
+      await Sessions.create({
+        userId: user._id,
+        token: refreshToken,
+        deviceInfo,
+        ipAddress: deviceInfo.ipAddress || "Unknown",
+        isActive: true,
+      });
+
+      return {
+        success: true,
+        data: {
+          user: this.sanitizeUser(user),
+          accessToken,
+          refreshToken,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Admin OTP verification failed",
+      };
+    }
+  }
+
+  // ====================== Resend Admin Login OTP ======================
+  async resendAdminLoginOtp({ email }) {
+    try {
+      const user = await Users.findOne({ email }).populate("role_id");
+      if (!user || user.role_id?.user_type !== "admin") {
+        throw new Error("User not found");
+      }
+
+      const otp = generateOTP();
+      user.emailVerificationToken = otp;
+      user.emailVerificationExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+
+      const verifyEmail = process.env.SMTP_VERIFY_EMAIL;
+
+      await sendMail({
+        to: verifyEmail,
+        from: verifyEmail,
+        subject: "Admin Login OTP (Resend)",
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <h2 style="color:#1e293b;">Admin Login Verification</h2>
+            <p>An admin login attempt was made for <strong>${user.name}</strong> (${user.email}).</p>
+            <p>Your new verification OTP is:</p>
+            <div style="text-align:center;margin:24px 0;">
+              <span style="display:inline-block;padding:16px 32px;background:#0f172a;color:#ef4444;
+                           font-size:32px;font-weight:700;letter-spacing:8px;border-radius:12px;
+                           border:2px solid #ef4444;">
+                ${otp}
+              </span>
+            </div>
+            <p style="color:#64748b;font-size:14px;">This OTP is valid for 10 minutes.</p>
+          </div>
+        `,
+      });
+
+      return {
+        success: true,
+        message: "New OTP sent to verification email",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Failed to resend OTP",
+      };
+    }
+  }
 
   async logout(refreshToken) {
     try {
@@ -558,6 +824,7 @@ export default class AuthService {
   }
 
   // ====================== forgePasswort ======================
+  // ==================== Forget Password — Send OTP to email ==================
   async forgetPassword(payload) {
     try {
       const { email } = payload;
@@ -567,15 +834,34 @@ export default class AuthService {
         return notFound("User not found");
       }
 
-      const resetToken = generateRandomToken();
-
-      user.resetPasswordToken = resetToken;
-      user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 min
+      const otp = generateOTP();
+      user.resetPasswordToken = otp;
+      user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 min
       await user.save();
+
+      await sendMail({
+        to: email,
+        subject: "Password Reset OTP",
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <h2 style="color:#1e293b;">Hello ${user.name || "User"},</h2>
+            <p>You requested a password reset. Your OTP is:</p>
+            <div style="text-align:center;margin:24px 0;">
+              <span style="display:inline-block;padding:16px 32px;background:#0f172a;color:#f59e0b;
+                           font-size:32px;font-weight:700;letter-spacing:8px;border-radius:12px;
+                           border:2px solid #f59e0b;">
+                ${otp}
+              </span>
+            </div>
+            <p style="color:#64748b;font-size:14px;">This OTP is valid for 10 minutes. If you didn't request this, ignore this email.</p>
+          </div>
+        `,
+      });
+
       return {
         success: true,
-        message: "Password reset link sent to email",
-        data: { resetToken }, // ⚠️ remove in production
+        message: "OTP sent to your email",
+        data: { email },
       };
     } catch (error) {
       console.error("ForgetPassword Error:", error);
@@ -586,24 +872,48 @@ export default class AuthService {
       };
     }
   }
-  // ==================== Reset Password ==================
-  async resetPassword(payload) {
-    try {
-      const { token, newPassword } = payload;
 
+  // ==================== Verify Reset OTP ==================
+  async verifyResetOtp({ email, otp }) {
+    try {
       const user = await Users.findOne({
-        resetPasswordToken: token,
+        email,
+        resetPasswordToken: otp.toUpperCase(),
         resetPasswordExpires: { $gt: Date.now() },
       });
 
       if (!user) {
-        return notFound("Invalid or expired reset token");
+        return { success: false, message: "Invalid or expired OTP" };
+      }
+
+      return { success: true, message: "OTP verified", data: { email } };
+    } catch (error) {
+      return { success: false, message: error.message || "OTP verification failed" };
+    }
+  }
+
+  // ==================== Reset Password — email + otp + newPassword + confirmPassword ==================
+  async resetPassword(payload) {
+    try {
+      const { email, otp, newPassword, confirmPassword } = payload;
+
+      if (newPassword !== confirmPassword) {
+        return { success: false, message: "Passwords do not match" };
+      }
+
+      const user = await Users.findOne({
+        email,
+        resetPasswordToken: otp.toUpperCase(),
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return notFound("Invalid or expired OTP");
       }
 
       user.password = await hashPassword(newPassword);
       user.resetPasswordToken = null;
       user.resetPasswordExpires = null;
-
       await user.save();
 
       return {
@@ -617,6 +927,87 @@ export default class AuthService {
         success: false,
         message: error.message || "Something went wrong in resetPassword",
         data: {},
+      };
+    }
+  }
+
+  // ====================== Force Logout & Delete User from All Collections ======================
+  async forceLogoutAndDeleteUser(userId, adminInfo = {}) {
+    try {
+      const user = await Users.findById(userId).populate("role_id");
+      if (!user) {
+        return { success: false, message: "User not found" };
+      }
+
+      // Delete user data from all collections in parallel
+      const deletionResults = await Promise.allSettled([
+        Sessions.deleteMany({ userId }),
+        UserDetails.deleteMany({ user_id: userId }),
+        Enrollments.deleteMany({ userId }),
+        Progress.deleteMany({ userId }),
+        Payments.deleteMany({ userId }),
+        Reviews.deleteMany({ userId }),
+        Notifications.deleteMany({ userId }),
+        Certificates.deleteMany({ userId }),
+        InstructorApplications.deleteMany({ userId }),
+        Earnings.deleteMany({ instructorId: userId }),
+        Quizzes.deleteMany({ userId }),
+        QuizAttempts.deleteMany({ userId }),
+        MCQAttempt.deleteMany({ userId }),
+        ActivityLogs.deleteMany({ userId }),
+        Reports.deleteMany({ generatedBy: userId }),
+        AIRecommendations.deleteMany({ userId }),
+        ChatMessages.deleteMany({ userId }),
+        Uploads.deleteMany({ userId }),
+        CourseDetails.deleteMany({ instructorId: userId }),
+      ]);
+
+      // Finally delete the user record itself
+      await Users.findByIdAndDelete(userId);
+
+      // Summarize deletions
+      const collectionNames = [
+        "Sessions", "UserDetails", "Enrollments", "Progress",
+        "Payments", "Reviews", "Notifications", "Certificates",
+        "InstructorApplications", "Earnings", "Quizzes", "QuizAttempts",
+        "MCQAttempts", "ActivityLogs", "Reports", "AIRecommendations",
+        "ChatMessages", "Uploads", "CourseDetails",
+      ];
+
+      const deletedCounts = {};
+      deletionResults.forEach((result, index) => {
+        if (result.status === "fulfilled" && result.value?.deletedCount > 0) {
+          deletedCounts[collectionNames[index]] = result.value.deletedCount;
+        }
+      });
+
+      // Save deletion log
+      await UserDeletionLogs.create({
+        deletedBy: adminInfo.adminId,
+        deletedByName: adminInfo.adminName || "Unknown",
+        deletedByEmail: adminInfo.adminEmail || "Unknown",
+        deletedUserId: userId,
+        deletedUserName: user.name,
+        deletedUserEmail: user.email,
+        deletedUserRole: user.role_id?.user_type || "user",
+        reason: adminInfo.reason || "",
+        deletedCollections: deletedCounts,
+      });
+
+      return {
+        success: true,
+        data: {
+          userId,
+          userName: user.name,
+          userEmail: user.email,
+          deletedFrom: deletedCounts,
+        },
+      };
+    } catch (error) {
+      console.error("Force logout & delete error:", error);
+      return {
+        success: false,
+        message: error.message || "Failed to force logout and delete user",
       };
     }
   }

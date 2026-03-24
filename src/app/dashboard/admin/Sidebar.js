@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
-  FiHome, FiUsers, FiChevronDown, FiMenu, FiX,
+  FiHome, FiUsers, FiChevronDown, FiMenu, FiX, FiTrash2,
 } from "react-icons/fi";
 import { MdOutlineSupportAgent, MdGroupRemove } from "react-icons/md";
 import { TbCategoryPlus, TbViewfinder } from "react-icons/tb";
@@ -18,6 +18,7 @@ import { GiPopcorn } from "react-icons/gi";
 export const menuIconMap = [
   { path: "/dashboard/admin", label: "Dashboard", icon: <FiHome /> },
   { path: "/dashboard/admin/all-users", label: "All Users", icon: <FiUsers /> },
+  { path: "/dashboard/admin/deletion-history", label: "Deletion History", icon: <FiTrash2 /> },
   { path: "/dashboard/admin/all-category", label: "All Category", icon: <SiCoursera size={18} /> },
   { path: "/dashboard/admin/all-courses", label: "All Courses", icon: <SiCoursera size={18} /> },
   { path: "/dashboard/admin/all-modules", label: "All Modules", icon: <FiUsers /> },
@@ -204,8 +205,8 @@ export default function Sidebar() {
   if (isDesktop) {
     return (
       <aside
-        className="fixed top-16 left-0 z-[900] flex flex-col
-                   w-[290px] h-[calc(100vh-4rem)]
+        className="fixed top-16 left-0 z-900 flex flex-col
+                   w-72.5 h-[calc(100vh-4rem)]
                    bg-[linear-gradient(170deg,#141834_0%,#131730_55%,#111427_100%)] border-r border-indigo-900/35 shadow-[6px_0_24px_rgba(5,8,24,0.5)]"
       >
         <SidebarNav
@@ -227,7 +228,7 @@ export default function Sidebar() {
         aria-label={mobileOpen ? "Close sidebar" : "Open sidebar"}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.92 }}
-        className="fixed top-[4.4rem] left-3 z-[1000] flex items-center justify-center
+        className="fixed top-[4.4rem] left-3 z-1000 flex items-center justify-center
                    w-9 h-9 rounded-xl border border-slate-700/80 bg-[#141834]
                    text-slate-300 shadow-lg hover:border-slate-500 hover:bg-slate-800/70
                    transition-colors duration-200"
@@ -260,7 +261,7 @@ export default function Sidebar() {
             variants={backdropVariants}
             initial="hidden" animate="visible" exit="exit"
             onClick={() => setMobileOpen(false)}
-            className="fixed inset-0 z-[899] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-899 bg-black/60 backdrop-blur-sm"
           />
         )}
       </AnimatePresence>
@@ -271,8 +272,8 @@ export default function Sidebar() {
           <motion.aside
             variants={drawerVariants}
             initial="hidden" animate="visible" exit="exit"
-            className="fixed top-16 left-0 z-[900] flex flex-col
-                       w-[300px] sm:w-[320px]
+            className="fixed top-16 left-0 z-900 flex flex-col
+                       w-75 sm:w-[320px]
                        h-[calc(100vh-4rem)]
                        bg-[linear-gradient(170deg,#141834_0%,#131730_55%,#111427_100%)] border-r border-indigo-900/35 shadow-[6px_0_24px_rgba(5,8,24,0.5)]"
           >

@@ -370,7 +370,7 @@ export default function AllLessonPage() {
             <button
               type="button"
               onClick={() => setPreviewVideoUrl(item.videoUrl)}
-              className="px-2 py-1 rounded text-xs bg-cyan-900/30 text-cyan-200 hover:bg-cyan-900/50 transition shadow-[0_8px_18px_rgba(34,211,238,0.2)] hover:shadow-[0_10px_22px_rgba(34,211,238,0.28)]"
+              className="px-2 py-1 rounded text-xs bg-cyan-900/30 text-cyan-200 hover:bg-cyan-900/50 transition"
             >
               Preview Video
             </button>
@@ -381,8 +381,8 @@ export default function AllLessonPage() {
         <td className="px-4 py-3 text-slate-300">
           <div className="flex items-center gap-2">
             <span>{current?.order ?? item.order ?? "—"}</span>
-            <button className="px-2 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 shadow-[0_6px_14px_rgba(15,23,42,0.45)]" onClick={() => moveOrder(item._id, "up")}>↑</button>
-            <button className="px-2 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 shadow-[0_6px_14px_rgba(15,23,42,0.45)]" onClick={() => moveOrder(item._id, "down")}>↓</button>
+            <button className="px-2 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700" onClick={() => moveOrder(item._id, "up")}>↑</button>
+            <button className="px-2 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700" onClick={() => moveOrder(item._id, "down")}>↓</button>
           </div>
         </td>
         <td className="px-4 py-3">
@@ -393,11 +393,11 @@ export default function AllLessonPage() {
         <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}</td>
         <td className="px-4 py-3 sticky right-0 bg-[#1b1f4a] z-10">
           <div className="flex items-center gap-2">
-            <button onClick={() => openUpdateModal(item)} className="p-2 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition shadow-[0_6px_16px_rgba(59,130,246,0.25)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.35)]">
-              <RiEdit2Line size={20} color="#3b82f6" />
+            <button onClick={() => openUpdateModal(item)} className="p-1.5 rounded-md bg-blue-500/10 hover:bg-blue-500/20 transition">
+              <RiEdit2Line size={16} color="#3b82f6" />
             </button>
-            <button onClick={() => { setSelectedLesson(item); setShowDeleteModal(true); }} className="p-2 rounded-md bg-red-500/10 hover:bg-red-500/20 transition shadow-[0_6px_16px_rgba(239,68,68,0.25)] hover:shadow-[0_8px_20px_rgba(239,68,68,0.35)]">
-              <RiDeleteBin6Line size={20} color="#ef4444" />
+            <button onClick={() => { setSelectedLesson(item); setShowDeleteModal(true); }} className="p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 transition">
+              <RiDeleteBin6Line size={16} color="#ef4444" />
             </button>
           </div>
         </td>
@@ -483,6 +483,7 @@ export default function AllLessonPage() {
               <textarea className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white" rows={3} placeholder="Description" value={createForm.description} onChange={(e) => setCreateForm((p) => ({ ...p, description: e.target.value }))} />
               <textarea className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white" rows={3} placeholder="Content" value={createForm.content} onChange={(e) => setCreateForm((p) => ({ ...p, content: e.target.value }))} />
               <input className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white" placeholder="Video URL" value={createForm.videoUrl} onChange={(e) => setCreateForm((p) => ({ ...p, videoUrl: e.target.value }))} />
+              <input className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white" placeholder="Search course..." value={createCourseSearch} onChange={(e) => setCreateCourseSearch(e.target.value)} />
               <SearchableSelect
                 value={createForm.courseId}
                 onChange={(v) => setCreateForm((p) => ({ ...p, courseId: v, moduleId: "" }))}
@@ -503,15 +504,15 @@ export default function AllLessonPage() {
               </label>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowCreateModal(false)} className="shadow-[0_8px_18px_rgba(15,23,42,0.35)]">Cancel</Button>
-              <Button onClick={handleCreateLesson} className="shadow-[0_10px_22px_rgba(37,99,235,0.3)]">Create</Button>
+              <Button variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+              <Button onClick={handleCreateLesson}>Create</Button>
             </div>
           </div>
         </div>
       )}
 
       {showUpdateModal && selectedLesson && (
-        <div className="fixed inset-0 z-[1200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowUpdateModal(false)}>
+        <div className="fixed inset-0 z-1200 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowUpdateModal(false)}>
           <div className="w-full max-w-xl rounded-xl border border-slate-700 bg-slate-950 p-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg text-white font-semibold mb-3">Update Lesson</h3>
             <div className="space-y-3">
@@ -525,21 +526,21 @@ export default function AllLessonPage() {
               </label>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowUpdateModal(false)} className="shadow-[0_8px_18px_rgba(15,23,42,0.35)]">Cancel</Button>
-              <Button onClick={handleUpdateLesson} className="shadow-[0_10px_22px_rgba(37,99,235,0.3)]">Update</Button>
+              <Button variant="outline" onClick={() => setShowUpdateModal(false)}>Cancel</Button>
+              <Button onClick={handleUpdateLesson}>Update</Button>
             </div>
           </div>
         </div>
       )}
 
       {showDeleteModal && selectedLesson && (
-        <div className="fixed inset-0 z-[1200] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 z-1200 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowDeleteModal(false)}>
           <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-950 p-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg text-white font-semibold mb-2">Delete Lesson</h3>
             <p className="text-sm text-slate-300">Are you sure you want to delete <span className="text-white font-medium">{selectedLesson.title}</span>?</p>
             <div className="mt-4 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowDeleteModal(false)} className="shadow-[0_8px_18px_rgba(15,23,42,0.35)]">Cancel</Button>
-              <Button onClick={handleDeleteLesson} className="bg-red-600 hover:bg-red-700 shadow-[0_10px_22px_rgba(220,38,38,0.3)]">Delete</Button>
+              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+              <Button onClick={handleDeleteLesson} className="bg-red-600 hover:bg-red-700">Delete</Button>
             </div>
           </div>
         </div>
@@ -547,11 +548,11 @@ export default function AllLessonPage() {
 
       {previewVideoUrl && (
         <div
-          className="fixed inset-0 z-[1300] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-1300 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setPreviewVideoUrl("")}
         >
           <div
-            className="relative w-[90vw] h-[90vw] sm:w-[70vw] sm:h-[70vw] lg:w-[50vw] lg:h-[50vh] max-w-[960px] max-h-[720px] rounded-xl border border-slate-700 bg-slate-950 p-2"
+            className="relative w-[90vw] h-[90vw] sm:w-[70vw] sm:h-[70vw] lg:w-[50vw] lg:h-[50vh] max-w-240 max-h-180 rounded-xl border border-slate-700 bg-slate-950 p-2"
             onClick={(e) => e.stopPropagation()}
           >
             <button

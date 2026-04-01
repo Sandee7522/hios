@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import * as z from "zod";
 
 import connectDB from "@/config/database";
-import LessonService from "@/services/LessonService";
 import { serverError, success } from "@/utils/apiResponse";
 import { AdminAuthentication, InstructorAuthentication } from "@/utils/jwt";
 import CourseServises from "@/services/courses";
 
-const service = new LessonService();
 
 const reorderLessonSchema = z.object({
   moduleId: z.string().min(1, "moduleId required"),

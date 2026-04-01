@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import * as z from "zod";
 
 import connectDB from "@/config/database";
-import LessonService from "@/services/LessonService";
 import { serverError, success } from "@/utils/apiResponse";
-import { AdminAuthentication, InstructorAuthentication } from "@/utils/jwt";
+import { InstructorAuthentication } from "@/utils/jwt";
 import CourseServises from "@/services/courses";
 
-const service = new LessonService();
 
 const deleteLessonSchema = z.object({
   id: z.string().min(1, "lesson id required"),
@@ -27,8 +25,8 @@ export async function POST(req) {
 
     const body = await req.json();
     const validated = deleteLessonSchema.parse(body);
+    
     const service = new CourseServises();
-
     const result = await service.deleteLesson(validated.id);
 
     return success("Delete Lesson successfully", result);

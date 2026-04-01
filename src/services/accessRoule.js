@@ -122,6 +122,8 @@ export default class AccessRuleService {
     }
   }
 
+  // nnn
+
   async checkAccessLesson(payload) {
     try {
       const { courseId, lessonId, enrollment } = payload;

@@ -34,6 +34,7 @@ export const GET_COURSE_DETAILS = (courseId) => `${API_URL}/courses/courseDetail
 export const GET_ALL_MODULES_BYID = `${API_URL}/module&Lessons/getModuleById`;
 export const MODULE_BY_COURSEID = `${API_URL}/module&Lessons/moduleByCourseId`;
 export const GET_LESSON = `${API_URL}/module&Lessons/getLesson`;
+export const MARK_LESSON_COMPLETED = `${API_URL}/module&Lessons/markCompleted`;
 
 // Payment & Enrollment APIs
 export const CREATE_ORDER = `${API_URL}/payment/createOrder`;

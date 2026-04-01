@@ -3,8 +3,9 @@ import AccessRuleService from "@/services/accessRoule";
 import { serverError, success } from "@/utils/apiResponse";
 import { AdminAuthentication } from "@/utils/jwt";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
-const getSchema = z.Object({
+const getSchema = z.object({
   courseId: z.string().min(1, "Course ID is required"),
 });
 

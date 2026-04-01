@@ -1,6 +1,6 @@
 import connectDB from "@/config/database";
+import PaymentServise from "@/services/payment";
 import { serverError, success } from "@/utils/apiResponse";
-import PaymentService from "@/services/payment.service";
 import { VerifyToken } from "@/utils/jwt";
 import * as z from "zod";
 const orderIdSchema = z.object({
@@ -12,7 +12,7 @@ export async function POST(req) {
     await VerifyToken();
     const body = await req.json();
     const validated = orderIdSchema.parse(body);
-    const service = new PaymentService();
+    const service = new PaymentServise();
     const result = await service.getPaymentByOrderId(validated);
 
     return success(result);

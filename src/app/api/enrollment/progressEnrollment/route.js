@@ -14,19 +14,26 @@ const progressSchema = z.object({
 export async function POST(req) {
   try {
     await connectDB();
-    const user = VerifyToken();
+    const user = await VerifyToken(req);
+
+    if (!user.status) {
+      return NextResponse.json(
+        { success: false, message: user.message },
+        { status: user.code || 401 },
+      );
+    }
 
     const body = await req.json();
     const validated = progressSchema.parse(body);
 
-    const service = PaymentServise();
+    const service = new PaymentServise();
     const result = await service.updateProgress({
-      userId: user.data._id,
+      userId: user.data.user._id,
       ...validated,
     });
-    return success("Single Enrollment Successfully", result);
+    return success("Progress updated successfully", result);
   } catch (error) {
-    console.log("Error Single Enrollment", error);
+    console.log("Error Progress Enrollment", error);
     if (error?.name === "ZodError") {
       return NextResponse.json(
         {
@@ -37,6 +44,6 @@ export async function POST(req) {
       );
     }
 
-    serverError();
+    return serverError();
   }
 }

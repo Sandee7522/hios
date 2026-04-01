@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { FiVideo } from "react-icons/fi";
-import { RiProgress2Line } from "react-icons/ri";
+import { FiVideo, FiCheckCircle } from "react-icons/fi";
 
 /** Convert a YouTube share/watch URL to an embeddable URL */
 function toEmbedUrl(url) {
@@ -23,7 +22,7 @@ function isYouTubeUrl(url) {
   return url && (url.includes("youtu.be") || url.includes("youtube.com"));
 }
 
-export default function LearningMetrial({ lesson }) {
+export default function LearningMetrial({ lesson, onMarkCompleted }) {
   if (!lesson) {
     return (
       <div
@@ -61,9 +60,24 @@ export default function LearningMetrial({ lesson }) {
           {lesson.title || "Untitled Lesson"}
         </h2>
 
-        <div className="self-start sm:self-auto">
-          <RiProgress2Line size={28} className="sm:size-8" />
-        </div>
+        {lesson._id && (
+          <div className="flex items-center justify-end mt-2 sm:mt-0">
+            {lesson.completed ? (
+              <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-medium">
+                <FiCheckCircle size={16} />
+                Completed
+              </span>
+            ) : (
+              <button
+                onClick={() => onMarkCompleted?.(lesson._id)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition"
+              >
+                <FiCheckCircle size={16} />
+                Mark as Completed
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Description ── */}

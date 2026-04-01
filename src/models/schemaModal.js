@@ -223,6 +223,7 @@ const LessonSchema = new mongoose.Schema(
     content: { type: String },
     videoUrl: { type: String },
     order: { type: Number, required: true },
+    completed: { type: Boolean, default: false },
     isPublished: { type: Boolean, default: true },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now }

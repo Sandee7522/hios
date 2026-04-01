@@ -1,5 +1,5 @@
 import connectDB from "@/config/database";
-import AuthService from "@/services/AuthService";
+import AuthService from "@/services/auth";
 import { success, serverError, validationError } from "@/utils/apiResponse";
 
 export async function POST(req) {

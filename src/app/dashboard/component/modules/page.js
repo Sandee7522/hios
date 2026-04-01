@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { TfiMenuAlt } from "react-icons/tfi";
 import { requestWithAuth } from "@/app/dashboard/utils/apiClient";
@@ -11,11 +11,20 @@ import {
   MODULE_BY_COURSEID,
   GET_ALL_MODULES_BYID,
   GET_LESSON,
+  MARK_LESSON_COMPLETED,
 } from "@/app/dashboard/utils/api";
 import MyLoader from "@/components/landing/MyLoder";
 import PageHeader from "@/components/common/PageHeader";
 
 export default function ModulesPage() {
+  return (
+    <Suspense fallback={<MyLoader />}>
+      <ModulesPageContent />
+    </Suspense>
+  );
+}
+
+function ModulesPageContent() {
   const searchParams = useSearchParams();
   const courseId = searchParams.get("courseId");
 
@@ -33,6 +42,9 @@ export default function ModulesPage() {
   const [lessonsError, setLessonsError] = useState("");
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // All lessons across all modules (for course-level progress)
+  const [allLessons, setAllLessons] = useState([]);
 
   /* ============================================================
      1. Fetch modules by courseId  →  MODULE_BY_COURSEID
@@ -84,6 +96,43 @@ export default function ModulesPage() {
       isMounted = false;
     };
   }, [courseId]);
+
+  /* ============================================================
+     Fetch ALL lessons across all modules for course progress
+     ============================================================ */
+  useEffect(() => {
+    if (modules.length === 0) return;
+
+    const fetchAllLessons = async () => {
+      try {
+        const results = await Promise.allSettled(
+          modules.map((mod) =>
+            requestWithAuth(`${GET_LESSON}?moduleId=${mod._id}`, {
+              method: "GET",
+              allowedRoles: ["user", "student"],
+            })
+          )
+        );
+
+        const all = [];
+        results.forEach((r) => {
+          if (r.status === "fulfilled" && Array.isArray(r.value?.data)) {
+            all.push(...r.value.data);
+          }
+        });
+        setAllLessons(all);
+      } catch (err) {
+        console.error("[Progress] fetchAllLessons error:", err);
+      }
+    };
+
+    fetchAllLessons();
+  }, [modules]);
+
+  // Calculate course progress from lesson.completed field
+  const totalLessons = allLessons.length;
+  const completedLessons = allLessons.filter((l) => l.completed === true).length;
+  const progressPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
   /* ============================================================
      2. Fetch lessons for selected module  →  GET_LESSON?moduleId=
@@ -159,6 +208,40 @@ export default function ModulesPage() {
   }, []);
 
   /* ============================================================
+     4. Mark lesson as completed
+     ============================================================ */
+  const handleMarkCompleted = useCallback(
+    async (lessonId) => {
+      if (!lessonId) return;
+      try {
+        const res = await requestWithAuth(MARK_LESSON_COMPLETED, {
+          method: "PUT",
+          body: { lessonId },
+          allowedRoles: ["user", "student"],
+        });
+
+        if (res?.status === 200 || res?.data) {
+          // Update current module lessons list
+          setLessons((prev) =>
+            prev.map((l) => (l._id === lessonId ? { ...l, completed: true } : l))
+          );
+          // Update allLessons for progress circle
+          setAllLessons((prev) =>
+            prev.map((l) => (l._id === lessonId ? { ...l, completed: true } : l))
+          );
+          // Update selected lesson
+          setSelectedLesson((prev) =>
+            prev?._id === lessonId ? { ...prev, completed: true } : prev
+          );
+        }
+      } catch (err) {
+        console.error("[Progress] markLessonCompleted error:", err);
+      }
+    },
+    [],
+  );
+
+  /* ============================================================
      LOADING STATE
      ============================================================ */
   if (modulesLoading) {
@@ -214,13 +297,54 @@ export default function ModulesPage() {
           title={selectedModule?.title || "Learning Dashboard"}
           subtitle={selectedLesson?.title || "Select a lesson to start learning"}
           actions={
-            <button
-              onClick={() => setSidebarOpen((v) => !v)}
-              className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-700/80 bg-slate-900/70 text-slate-300 hover:text-white hover:bg-slate-800 transition"
-              aria-label="Toggle sidebar"
-            >
-              <TfiMenuAlt size={20} />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Circular Progress Indicator */}
+              <div className="flex items-center gap-2">
+                <svg width="40" height="40" viewBox="0 0 40 40">
+                  {/* Background circle */}
+                  <circle
+                    cx="20" cy="20" r="16"
+                    fill="none"
+                    stroke="rgba(100,116,139,0.3)"
+                    strokeWidth="4"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx="20" cy="20" r="16"
+                    fill="none"
+                    stroke={progressPercent >= 100 ? "#10b981" : "#3b82f6"}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 16}`}
+                    strokeDashoffset={`${2 * Math.PI * 16 * (1 - progressPercent / 100)}`}
+                    transform="rotate(-90 20 20)"
+                    style={{ transition: "stroke-dashoffset 0.5s ease" }}
+                  />
+                  {/* Percentage text */}
+                  <text
+                    x="20" y="20"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill={progressPercent >= 100 ? "#10b981" : "#94a3b8"}
+                    fontSize="10"
+                    fontWeight="700"
+                  >
+                    {progressPercent}%
+                  </text>
+                </svg>
+                <span className="text-xs text-slate-400 hidden sm:block">
+                  {completedLessons}/{totalLessons}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setSidebarOpen((v) => !v)}
+                className="flex items-center justify-center w-10 h-10 rounded-xl border border-slate-700/80 bg-slate-900/70 text-slate-300 hover:text-white hover:bg-slate-800 transition"
+                aria-label="Toggle sidebar"
+              >
+                <TfiMenuAlt size={20} />
+              </button>
+            </div>
           }
         />
       </div>
@@ -268,7 +392,10 @@ export default function ModulesPage() {
               padding: "1.25rem",
             }}
           >
-            <LearningMetrial lesson={selectedLesson} />
+            <LearningMetrial
+              lesson={selectedLesson}
+              onMarkCompleted={handleMarkCompleted}
+            />
           </div>
 
           {/* Lessons list for current module */}

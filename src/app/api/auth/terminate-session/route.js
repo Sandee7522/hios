@@ -1,7 +1,7 @@
 import connectDB from "@/config/database";
-import AuthService from "@/services/AuthService";
 import { z } from "zod";
 import { success, validationError, serverError } from "@/utils/apiResponse";
+import AuthService from "@/services/auth";
 
 const schema = z.object({
   sessionId: z.string().min(1),

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
-import { FiChevronDown, FiChevronRight, FiPlayCircle } from "react-icons/fi";
+import { FiChevronDown, FiChevronRight, FiPlayCircle, FiCheckCircle } from "react-icons/fi";
 export default function ModulesSidebar({
   modules = [],
   lessons = [],
@@ -216,10 +216,17 @@ export default function ModulesSidebar({
                                   transition: "background 0.2s",
                                 }}
                               >
-                                <FiPlayCircle
-                                  size={23}
-                                  style={{ flexShrink: 0, opacity: 0.7 }}
-                                />
+                                {lesson.completed ? (
+                                  <FiCheckCircle
+                                    size={23}
+                                    style={{ flexShrink: 0, color: "#10b981" }}
+                                  />
+                                ) : (
+                                  <FiPlayCircle
+                                    size={23}
+                                    style={{ flexShrink: 0, opacity: 0.7 }}
+                                  />
+                                )}
                                 {lesson.order ?? lIdx + 1}. {lesson.title}
                               </button>
                             );

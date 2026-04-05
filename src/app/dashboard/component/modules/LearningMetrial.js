@@ -3,7 +3,7 @@
 import React from "react";
 import { FiVideo, FiCheckCircle } from "react-icons/fi";
 
-/** Convert a YouTube share/watch URL to an embeddable URL */
+/** Convert a YouTube share/watch URL  an embeddable URL */
 function toEmbedUrl(url) {
   if (!url) return null;
   try {

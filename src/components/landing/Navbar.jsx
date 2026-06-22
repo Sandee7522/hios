@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Phone, Mail } from "lucide-react";
+import { Home, BookOpen, Phone, Mail, LogIn, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
 import { getUserRole } from "@/app/dashboard/utils/auth";
+import Image from "next/image";
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
@@ -28,7 +27,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "About Us", href: "#about" },
-    { name: "Courses", href: "#courses" },
+    { name: "Courses", href: "#programs" },
     { name: "Gallery", href: "#gallery" },
     { name: "Contact Us", href: "#contact" },
   ];
@@ -65,15 +64,19 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 md:h-20">
 
             {/* Logo Section */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.7)] transition-all duration-300">
-                S
-              </div>
+            <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
+              <Image
+                src="/logos.png"
+                alt="SARKAR CAREER ACADEMY"
+                width={230}
+                height={60}
+                className="w-[100px] sm:w-[150px] md:w-[230px] h-auto object-contain"
+              />
               <div className="flex flex-col justify-center">
-                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 leading-tight">
+                <span className="text-[11px] sm:text-sm md:text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-white to-gray-400 leading-tight">
                   SARKAR CAREER ACADEMY
                 </span>
-                <span className="text-[10px] text-blue-400 font-medium">
+                <span className="text-[7px] sm:text-[8px] md:text-[10px] text-blue-400 font-medium">
                   लेखक, मार्गदर्शक <span className="text-red-400">Ravindra Sarkar</span>
                 </span>
               </div>
@@ -119,74 +122,45 @@ export default function Navbar() {
                 )}
               </div>
             </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              className="lg:hidden p-2 text-white"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-[#020617] border-b border-white/10"
-            >
-              <div className="container px-4 py-4 space-y-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className="block text-sm font-medium py-2 text-gray-300 hover:text-white"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-
-                {/* Mobile Contact Info */}
-                <div className="py-2 flex flex-col gap-2 text-xs text-slate-400">
-                  <div className="flex items-center gap-2"><Phone size={14} /> 8805667100 / 8380066963</div>
-                  <div className="flex items-center gap-2"><Mail size={14} /> careeracademy1995@gmail.com</div>
-                </div>
-
-                <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
-                  {userRole ? (
-                    <Link href="/dashboard" onClick={() => setIsOpen(false)}>
-                      <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white border-none">
-                        Go to Dashboard
-                      </Button>
-                    </Link>
-                  ) : (
-                    <>
-                      <Link href="/login" onClick={() => setIsOpen(false)}>
-                        <Button
-                          variant="outline"
-                          className="w-full border-white/20 text-white hover:bg-white/10"
-                        >
-                          Log In
-                        </Button>
-                      </Link>
-                      <Link href="/register" onClick={() => setIsOpen(false)}>
-                        <Button className="w-full bg-linear-to-r from-blue-600 to-cyan-500 text-white border-none">
-                          Enroll Now
-                        </Button>
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
+
+      {/* GLOBAL FIX FOR HORIZONTAL SCROLL ON MOBILE */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        html, body {
+          max-width: 100vw;
+          overflow-x: hidden;
+        }
+      `}} />
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#020617]/95 backdrop-blur-lg border-t border-white/10 z-[100] flex justify-around items-center pt-3 pb-4 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+        <Link href="/" className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-white transition-colors">
+          <Home size={20} />
+          <span className="text-[10px] font-medium tracking-wide">Home</span>
+        </Link>
+        <Link href="#courses" className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-white transition-colors">
+          <BookOpen size={20} />
+          <span className="text-[10px] font-medium tracking-wide">Courses</span>
+        </Link>
+        <Link href="#contact" className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-white transition-colors">
+          <Phone size={20} />
+          <span className="text-[10px] font-medium tracking-wide">Contact</span>
+        </Link>
+        {userRole ? (
+          <Link href="/dashboard" className="flex flex-col items-center gap-1.5 text-blue-400 transition-colors">
+            <User size={20} />
+            <span className="text-[10px] font-medium tracking-wide">Dashboard</span>
+          </Link>
+        ) : (
+          <Link href="/login" className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-white transition-colors">
+            <LogIn size={20} />
+            <span className="text-[10px] font-medium tracking-wide">Login</span>
+          </Link>
+        )}
+      </div>
     </header>
   );
 }

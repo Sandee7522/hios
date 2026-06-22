@@ -27,7 +27,7 @@ export default function About() {
                         >
                             <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-cyan-500 rounded-2xl opacity-30 blur-lg group-hover:opacity-50 transition-opacity duration-500" />
                             <img
-                                src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop"
+                                src="/logos.png"
                                 alt="SARKAR CAREER ACADEMY"
                                 className="relative rounded-2xl shadow-2xl w-full h-100 object-cover border border-white/10"
                             />

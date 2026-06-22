@@ -262,10 +262,10 @@ function AuthPageContent() {
       </div>
 
       {/* Main Container */}
-      <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 rounded-3xl overflow-hidden border border-cyan-900/30 bg-[#0a1628]/90 backdrop-blur-xl shadow-2xl shadow-black/50 min-h-[560px]">
+      <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 rounded-3xl overflow-hidden border border-cyan-900/30 bg-[#0a1628]/90 backdrop-blur-xl shadow-2xl shadow-black/50 min-h-140">
 
         {/* ===== LEFT — Brand Image (stays fixed) ===== */}
-        <div className="relative col-span-1 lg:col-span-2 hidden lg:flex flex-col items-center justify-center p-8 bg-gradient-to-b from-[#0a1628] via-[#0d1a30] to-[#0a1628] border-r border-cyan-900/20">
+        <div className="relative col-span-1 lg:col-span-2 hidden lg:flex flex-col items-center justify-center p-8 bg-linear-to-b from-[#0a1628] via-[#0d1a30] to-[#0a1628] border-r border-cyan-900/20">
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px]" />
           </div>
@@ -275,12 +275,12 @@ function AuthPageContent() {
             animate={{ y: isSignUp ? -8 : 0 }}
             transition={{ duration: 0.6, ease: 'easeInOut' }}
           >
-            <img src="/hios.jpg" alt="HIOS" className="w-full h-full object-cover" />
+            <img src="/coaching.png" alt="SARKAR CAREER ACADEMY" className="w-full h-full object-cover" />
           </motion.div>
 
-          <p className="text-cyan-400/60 text-sm tracking-wider uppercase mb-1">Hamsa Institute of</p>
-          <h2 className="text-2xl font-bold text-white tracking-wide">Occult Science</h2>
-          <div className="mt-6 w-20 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+          <p className="text-cyan-400/60 text-sm tracking-wider uppercase mb-1">SARKAR CAREER </p>
+          <h2 className="text-2xl font-bold text-white tracking-wide">ACADEMY</h2>
+          <div className="mt-6 w-20 h-px bg-linear-to-r from-transparent via-cyan-500/40 to-transparent" />
 
           {/* Dynamic text based on panel */}
           <AnimatePresence mode="wait">
@@ -290,7 +290,7 @@ function AuthPageContent() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="mt-4 text-cyan-700/80 text-xs text-center max-w-[220px] leading-relaxed"
+              className="mt-4 text-cyan-700/80 text-xs text-center max-w-55 leading-relaxed"
             >
               {isSignUp
                 ? 'Begin your journey into the mystical arts'
@@ -312,7 +312,7 @@ function AuthPageContent() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="p-8 sm:p-10 lg:p-12 flex flex-col justify-center min-h-[560px]"
+                className="p-8 sm:p-10 lg:p-12 flex flex-col justify-center min-h-140"
               >
                 <MobileLogo />
 
@@ -326,7 +326,7 @@ function AuthPageContent() {
                       {loginError && <ErrorBox message={loginError} />}
 
                       <form onSubmit={handleLogin} className="space-y-5">
-                        <InputField label="Email Address" type="email" value={loginEmail} onChange={setLoginEmail} placeholder="you@example.com" />
+                        <InputField label="Email Address" type="email" value={loginEmail} onChange={setLoginEmail} placeholder="careeracademy1995@gmail.com" />
                         <PasswordField label="Password" value={loginPassword} onChange={setLoginPassword} show={showLoginPw} toggleShow={() => setShowLoginPw(!showLoginPw)} />
 
                         <div className="flex justify-end">
@@ -393,7 +393,7 @@ function AuthPageContent() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="p-8 sm:p-10 lg:p-12 flex flex-col justify-center min-h-[560px]"
+                className="p-8 sm:p-10 lg:p-12 flex flex-col justify-center min-h-140"
               >
                 <MobileLogo />
 
@@ -408,7 +408,7 @@ function AuthPageContent() {
 
                       <form onSubmit={handleRegister} className="space-y-5">
                         <InputField label="Full Name" type="text" value={regName} onChange={setRegName} placeholder="Your name" />
-                        <InputField label="Email Address" type="email" value={regEmail} onChange={setRegEmail} placeholder="you@example.com" />
+                        <InputField label="Email Address" type="email" value={regEmail} onChange={setRegEmail} placeholder="careeracademy1995@gmail.com" />
                         <PasswordField label="Password" value={regPassword} onChange={setRegPassword} show={showRegPw} toggleShow={() => setShowRegPw(!showRegPw)} minLength={6} placeholder="Min 6 characters" />
                         <SubmitButton loading={regLoading} text="Create Account" loadingText="Sending OTP..." />
                       </form>
@@ -474,11 +474,11 @@ function MobileLogo() {
   return (
     <div className="lg:hidden flex items-center gap-3 mb-7 justify-center">
       <div className="w-11 h-11 rounded-xl overflow-hidden border border-cyan-800/30">
-        <img src="/hios.jpg" alt="HIOS" className="w-full h-full object-cover" />
+        <img src="/coaching.png" alt="SARKAR CAREER ACADEMY" className="w-full h-full object-cover" />
       </div>
       <div>
-        <p className="text-cyan-400/60 text-[10px] tracking-wider uppercase">Hamsa Institute of</p>
-        <p className="text-white font-bold text-sm">Occult Science</p>
+        <p className="text-cyan-400/60 text-[10px] tracking-wider uppercase">SARKAR CAREER</p>
+        <p className="text-white font-bold text-sm">ACADEMY</p>
       </div>
     </div>
   );

@@ -53,7 +53,7 @@ export default function CallToAction() {
               </span>
             </h2>
             <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-              Join Hamsa Institute of Occult Science and take the first step
+              Join SARKAR CAREER ACADEMY today and take the first step
               toward a brighter future. Admissions are now open for upcoming
               batches.
             </p>
@@ -67,7 +67,7 @@ export default function CallToAction() {
                 Enroll Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Link href="mailto:info@hamsainstitute.com">
+              <Link href="mailto:info@sarkar-career-academy.com">
                 <Button
                   size="lg"
                   variant="outline"

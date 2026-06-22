@@ -1,4 +1,6 @@
-# HIOS - Learning Management System
+# SARKAR CAREER ACADEMY 
+
+   - Learning Management System
 
 A full-stack LMS built with **Next.js (App Router)**, **MongoDB**, **Razorpay**, and **Cloudinary**.
 

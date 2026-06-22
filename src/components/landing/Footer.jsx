@@ -18,10 +18,10 @@ export default function Footer() {
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-xl shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-300">
-                H
+                S
               </div>
               <span className="text-xl font-bold text-white">
-                Hamsa Institute
+                SARKAR CAREER ACADEMY
               </span>
             </Link>
             <p className="text-slate-400 leading-relaxed font-light">
@@ -160,13 +160,13 @@ export default function Footer() {
                 <div className="w-8 h-8 rounded-lg bg-blue-900/20 flex items-center justify-center shrink-0">
                   <Phone className="h-4 w-4 text-blue-400" />
                 </div>
-                <span>+91 98765 43210</span>
+                <span>+91 8380066963</span>
               </li>
               <li className="flex items-center gap-3 text-slate-400">
                 <div className="w-8 h-8 rounded-lg bg-blue-900/20 flex items-center justify-center shrink-0">
                   <Mail className="h-4 w-4 text-blue-400" />
                 </div>
-                <span>info@hamsainstitute.com</span>
+                <span>careeracademy1995@gmail.com</span>
               </li>
             </ul>
           </div>
@@ -174,7 +174,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <p>
-            © {new Date().getFullYear()} Hamsa Institute of Occult Science. All
+            © {new Date().getFullYear()} SARKAR CAREER ACADEMY. All
             rights reserved.
           </p>
           <div className="flex items-center gap-8">

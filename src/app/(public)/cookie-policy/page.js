@@ -3,8 +3,8 @@ import LegalHeader from "@/components/legal/LegalHeader";
 import LegalSection from "@/components/legal/LegalSection";
 
 export const metadata = {
-    title: 'Cookie Policy | Hamsa Institute',
-    description: 'Cookie Policy for Hamsa Institute of Occult Science',
+    title: 'Cookie Policy | SARKAR CAREER ACADEMY',
+    description: 'Cookie Policy for SARKAR CAREER ACADEMY',
 }
 
 export default function CookiePolicy() {
@@ -16,7 +16,7 @@ export default function CookiePolicy() {
 
             <LegalSection>
                 <p>
-                    This Cookie Policy explains what cookies are and how Hamsa Institute of Occult Science ("we," "us," or "our") uses them on our website. You should read this policy so you can understand what type of cookies we use, the information we collect using cookies, and how that information is used.
+                    This Cookie Policy explains what cookies are and how SARKAR CAREER ACADEMY ("we," "us," or "our") uses them on our website. You should read this policy so you can understand what type of cookies we use, the information we collect using cookies, and how that information is used.
                 </p>
             </LegalSection>
 
@@ -52,7 +52,7 @@ export default function CookiePolicy() {
 
             <LegalSection title="5. Contact Us">
                 <p>If you have any questions about our use of cookies, please contact us at:</p>
-                <p className="mt-2 text-blue-400">info@hamsainstitute.com</p>
+                <p className="mt-2 text-blue-400">info@sarkar-career-academy.com</p>
             </LegalSection>
         </LegalLayout>
     );

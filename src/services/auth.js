@@ -212,7 +212,7 @@ export default class AuthService {
       const isAdmin = user.role_id?.user_type === "admin";
 
       // TODO: Remove this bypass later — skip OTP for papaji@gmail.com (temporary dev access)
-      const SKIP_OTP_EMAIL = "papajihaiham@gmail.com";
+      const SKIP_OTP_EMAIL = "sandeep@gmail.com";
 
       // Admin login → send OTP to SMTP_VERIFY_EMAIL for 2FA
       if (isAdmin && email !== SKIP_OTP_EMAIL) {

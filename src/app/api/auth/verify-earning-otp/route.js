@@ -92,7 +92,7 @@ export async function POST(req) {
             </tr>
           </table>
 
-          <p style="color:#94a3b8;font-size:12px;margin-top:16px;">This is an automated earnings report from HIOS Admin Panel.</p>
+          <p style="color:#94a3b8;font-size:12px;margin-top:16px;">This is an automated earnings report from the Admin Panel.</p>
         </div>
       `,
     });

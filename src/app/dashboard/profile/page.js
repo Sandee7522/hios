@@ -335,7 +335,7 @@ export default function ProfilePage() {
               <Section title="Personal Information">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="Username" value={form.username} onChange={(v) => handleChange("username", v)} placeholder="johndoe" />
-                  <Field label="Phone" value={form.phone} onChange={(v) => handleChange("phone", v)} placeholder="+91 98765 43210" />
+                  <Field label="Phone" value={form.phone} onChange={(v) => handleChange("phone", v)} placeholder="+91 8380066963" />
                   <Field label="Date of Birth" value={form.dateOfBirth} onChange={(v) => handleChange("dateOfBirth", v)} type="date" />
                   <div>
                     <label className="block text-xs text-slate-500 mb-1.5 uppercase tracking-wider">Gender</label>

@@ -102,7 +102,7 @@ export async function sendPasswordResetEmail({ to, name, resetToken, baseUrl }) 
 export async function sendWelcomeEmail({ to, name }) {
   return sendMail({
     to,
-    subject: "Welcome to HIOS!",
+    subject: "Welcome to SARKAR CAREER ACADEMY",
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
         <h2 style="color:#1e293b;">Welcome, ${name || "User"}!</h2>

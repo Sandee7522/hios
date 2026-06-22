@@ -35,7 +35,7 @@ export default function Testimonials() {
                             <CardContent className="p-8 md:p-16 text-center">
                                 <Quote className="h-16 w-16 text-blue-500/20 mx-auto mb-8" />
                                 <blockquote className="text-xl md:text-3xl font-light leading-relaxed mb-10 text-slate-200">
-                                    "Hamsa Institute transformed my learning experience. The practical approach and supportive faculty helped me gain real confidence in my skills. I felt ready for the industry from day one."
+                                    "SARKAR CAREER ACADEMYtransformed my learning experience. The practical approach and supportive faculty helped me gain real confidence in my skills. I felt ready for the industry from day one."
                                 </blockquote>
                                 <div className="flex flex-col items-center">
                                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 mb-4 p-1">

@@ -28,7 +28,7 @@ export default function About() {
                             <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-cyan-500 rounded-2xl opacity-30 blur-lg group-hover:opacity-50 transition-opacity duration-500" />
                             <img
                                 src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop"
-                                alt="About Hamsa Institute"
+                                alt="SARKAR CAREER ACADEMY"
                                 className="relative rounded-2xl shadow-2xl w-full h-100 object-cover border border-white/10"
                             />
                             <div className="absolute -bottom-6 -right-6 bg-[#0f172a] p-6 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/10">
@@ -46,10 +46,10 @@ export default function About() {
                             transition={{ duration: 0.5 }}
                         >
                             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-                                About Hamsa Institute
+                                About SARKAR CAREER ACADEMY
                             </h2>
                             <p className="text-lg text-slate-400 mb-8 leading-relaxed font-light">
-                                Hamsa Institute of Occult Science is a forward-thinking educational institution dedicated to academic excellence and professional development. We focus on outcome-oriented learning that equips students with practical skills, critical thinking abilities, and industry-relevant knowledge.
+                                SARKAR CAREER ACADEMY is a forward-thinking educational institution dedicated to academic excellence and professional development. We focus on outcome-oriented learning that equips students with practical skills, critical thinking abilities, and industry-relevant knowledge.
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

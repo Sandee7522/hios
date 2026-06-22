@@ -133,34 +133,34 @@ export default function ForgotPasswordPage() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/8 rounded-full blur-[120px]" />
       </div>
 
-      <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 rounded-3xl overflow-hidden border border-cyan-900/30 bg-[#0a1628]/90 backdrop-blur-xl shadow-2xl shadow-black/50 min-h-[560px]">
+      <div className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 rounded-3xl overflow-hidden border border-cyan-900/30 bg-[#0a1628]/90 backdrop-blur-xl shadow-2xl shadow-black/50 min-h-140">
 
         {/* Left — Brand */}
-        <div className="relative col-span-1 lg:col-span-2 hidden lg:flex flex-col items-center justify-center p-8 bg-gradient-to-b from-[#0a1628] via-[#0d1a30] to-[#0a1628] border-r border-cyan-900/20">
+        <div className="relative col-span-1 lg:col-span-2 hidden lg:flex flex-col items-center justify-center p-8 bg-linear-to-b from-[#0a1628] via-[#0d1a30] to-[#0a1628] border-r border-cyan-900/20">
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px]" />
           </div>
           <div className="relative w-52 h-52 rounded-2xl overflow-hidden mb-6 shadow-xl shadow-cyan-900/20 border border-cyan-800/20">
-            <img src="/hios.jpg" alt="HIOS" className="w-full h-full object-cover" />
+            <img src="/coaching.png" alt="SARKAR CAREER ACADEMY" className="w-full h-full object-cover" />
           </div>
-          <p className="text-cyan-400/60 text-sm tracking-wider uppercase mb-1">Hamsa Institute of</p>
-          <h2 className="text-2xl font-bold text-white tracking-wide">Occult Science</h2>
-          <div className="mt-6 w-20 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
-          <p className="mt-4 text-cyan-700/80 text-xs text-center max-w-[220px] leading-relaxed">
+          <p className="text-cyan-400/60 text-sm tracking-wider uppercase mb-1">SARKAR CAREER</p>
+          <h2 className="text-2xl font-bold text-white tracking-wide">ACADEMY</h2>
+          <div className="mt-6 w-20 h-px bg-linear-to-r from-transparent via-cyan-500/40 to-transparent" />
+          <p className="mt-4 text-cyan-700/80 text-xs text-center max-w-55 leading-relaxed">
             Reset your password securely
           </p>
         </div>
 
         {/* Right — Form */}
-        <div className="col-span-1 lg:col-span-3 p-8 sm:p-10 lg:p-12 flex flex-col justify-center min-h-[560px]">
+        <div className="col-span-1 lg:col-span-3 p-8 sm:p-10 lg:p-12 flex flex-col justify-center min-h-140">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-7 justify-center">
             <div className="w-11 h-11 rounded-xl overflow-hidden border border-cyan-800/30">
-              <img src="/hios.jpg" alt="HIOS" className="w-full h-full object-cover" />
+              <img src="/coaching.png" alt="SARKAR CAREER ACADEMY" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-cyan-400/60 text-[10px] tracking-wider uppercase">Hamsa Institute of</p>
-              <p className="text-white font-bold text-sm">Occult Science</p>
+              <p className="text-cyan-400/60 text-[10px] tracking-wider uppercase">SARKAR CAREER</p>
+              <p className="text-white font-bold text-sm">ACADEMY</p>
             </div>
           </div>
 
@@ -180,7 +180,7 @@ export default function ForgotPasswordPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      placeholder="careeracademy1995@gmail.com"
                       required
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-cyan-900/30 text-white text-sm placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 transition-all"
                     />
@@ -279,7 +279,7 @@ export default function ForgotPasswordPage() {
                 <p className="text-slate-500 text-sm mb-8">Your password has been changed successfully</p>
                 <Link
                   href="/login"
-                  className="inline-block px-8 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 hover:from-cyan-500 hover:via-blue-500 hover:to-purple-500 shadow-lg shadow-blue-900/30 transition-all duration-300"
+                  className="inline-block px-8 py-3.5 rounded-xl font-semibold text-sm text-white bg-linear-to-r from-cyan-600 via-blue-600 to-purple-600 hover:from-cyan-500 hover:via-blue-500 hover:to-purple-500 shadow-lg shadow-blue-900/30 transition-all duration-300"
                 >
                   Go to Sign In
                 </Link>
@@ -327,7 +327,7 @@ function SubmitButton({ loading, text, loadingText }) {
     <button
       type="submit"
       disabled={loading}
-      className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 hover:from-cyan-500 hover:via-blue-500 hover:to-purple-500 shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition-all duration-300 bg-linear-to-r from-cyan-600 via-blue-600 to-purple-600 hover:from-cyan-500 hover:via-blue-500 hover:to-purple-500 shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {loading ? (
         <>
